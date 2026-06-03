@@ -22,9 +22,9 @@ export default function CountrySelector({ onSelect, className = '' }: CountrySel
 
   const filtered = search
     ? COUNTRIES.filter((c) =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.code.toLowerCase().includes(search.toLowerCase())
-      )
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.code.toLowerCase().includes(search.toLowerCase())
+    )
     : COUNTRIES;
 
   return (
@@ -46,12 +46,12 @@ export default function CountrySelector({ onSelect, className = '' }: CountrySel
           <button
             key={country.code}
             onClick={() => onSelect(country)}
-            className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-blue-500/30 transition-all duration-200 text-left"
+            className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-blue-500/30 transition-all duration-200 text-left hover:cursor-pointer"
             aria-label={`Select ${country.name}`}
           >
-            <Image 
-              src={`https://flagcdn.com/w80/${country.code.toLowerCase()}.png`} 
-              alt="" 
+            <Image
+              src={`https://flagcdn.com/w80/${country.code.toLowerCase()}.png`}
+              alt=""
               width={32}
               height={24}
               unoptimized
