@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
-import { BookOpen, Trophy, MessageCircle, MapPin } from 'lucide-react';
+import { BookOpen, Trophy, MessageCircle, MapPin, BarChart2 } from 'lucide-react';
 import TranslatedText from '@/components/ui/TranslatedText';
 
-export type ActiveTab = 'learn' | 'quiz' | 'polling' | 'assistant';
+export type ActiveTab = 'learn' | 'quiz' | 'polling' | 'assistant' | 'progress';
 
 interface BottomNavProps {
   activeTab: ActiveTab;
@@ -12,7 +12,6 @@ interface BottomNavProps {
 /** Mobile-optimized persistent navigation bar for core sections. */
 export default function BottomNav({ activeTab, countryCode }: BottomNavProps) {
   const router = useRouter();
-
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#020817] border-t border-white/[0.06] flex items-center px-2 sm:px-4 pb-safe"
@@ -29,7 +28,6 @@ export default function BottomNav({ activeTab, countryCode }: BottomNavProps) {
         <BookOpen className="w-5 h-5" />
         <TranslatedText text="Learn" />
       </button>
-
       <button
         onClick={() => router.push('/quiz')}
         className={`flex-1 flex flex-col items-center justify-center py-3 text-[10px] font-bold gap-1 transition-colors ${
@@ -41,7 +39,17 @@ export default function BottomNav({ activeTab, countryCode }: BottomNavProps) {
         <Trophy className="w-5 h-5" />
         <TranslatedText text="Quiz" />
       </button>
-
+      <button
+        onClick={() => router.push('/progress')}
+        className={`flex-1 flex flex-col items-center justify-center py-3 text-[10px] font-bold gap-1 transition-colors ${
+          activeTab === 'progress' ? 'text-blue-400' : 'text-slate-600 hover:text-slate-400'
+        }`}
+        aria-label="Go to Progress page"
+        aria-current={activeTab === 'progress' ? 'page' : undefined}
+      >
+        <BarChart2 className="w-5 h-5" />
+        <TranslatedText text="Progress" />
+      </button>
       <button
         onClick={() => router.push('/polling-stations')}
         className={`flex-1 flex flex-col items-center justify-center py-3 text-[10px] font-bold gap-1 transition-colors ${
@@ -53,7 +61,6 @@ export default function BottomNav({ activeTab, countryCode }: BottomNavProps) {
         <MapPin className="w-5 h-5" />
         <TranslatedText text="Polls" />
       </button>
-
       <button
         onClick={() => router.push('/assistant')}
         className={`flex-1 flex flex-col items-center justify-center py-3 text-[10px] font-bold gap-1 transition-colors ${
