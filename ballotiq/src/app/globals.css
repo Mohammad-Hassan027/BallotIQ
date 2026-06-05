@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 /* 
  * BallotIQ Premium Design System 
  * Inspired by high-end SaaS platforms (Linear, Vercel, Framer)
@@ -10,37 +8,41 @@
     /* Sophisticated Dark Palette */
     --background: #02040a;
     --foreground: #f8fafc;
-    
+
     --card: #0a0c14;
     --card-foreground: #f8fafc;
-    
+
     --popover: #0a0c14;
     --popover-foreground: #f8fafc;
-    
+
     --primary: #6366f1; /* Indigo */
     --primary-foreground: #ffffff;
-    
+
     --secondary: #1e293b;
     --secondary-foreground: #f8fafc;
-    
+
     --muted: #0f172a;
     --muted-foreground: #94a3b8;
-    
+
     --accent: #38bdf8; /* Sky Blue */
     --accent-foreground: #02040a;
-    
+
     --destructive: #ef4444;
     --destructive-foreground: #f8fafc;
-    
+
     --border: #1e293b;
     --input: #1e293b;
     --ring: #6366f1;
-    
+
     --radius: 1rem;
-    
+
     /* Custom Gradients */
     --grad-primary: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
-    --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+    --grad-surface: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
   }
 }
 
@@ -52,73 +54,28 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Plus Jakarta Sans", sans-serif;
   letter-spacing: -0.02em;
 }
 
-/* --- Premium Utilities --- */
-
-/* Grainy texture overlay */
-.bg-grain {
-  position: relative;
-}
-.bg-grain::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3BaseFilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/baseFilter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
-/* Glassmorphism */
-.glass {
-  background: rgba(10, 12, 20, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-light {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Hover effects */
-.hover-glow {
-  transition: all 0.3s ease;
-}
-.hover-glow:hover {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.4);
-}
-
-/* Bento Grid Card */
-.bento-card {
-  @apply glass rounded-[2rem] p-8 overflow-hidden relative transition-all duration-500;
-}
-.bento-card:hover {
-  @apply border-white/20 bg-white/[0.05];
-}
-
-/* Typography elevations */
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70;
-}
-
-.text-primary-gradient {
-  background: var(--grad-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+/* Custom classes are now defined in tailwind.config.ts */
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -138,8 +95,13 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 .animate-float {
   animation: float 6s ease-in-out infinite;
@@ -149,12 +111,4 @@ h1, h2, h3, h4, h5, h6 {
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
