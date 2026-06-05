@@ -3,6 +3,7 @@
  * and AI-generated content before rendering.
  * Prevents XSS attacks and prompt injection.
  */
+import DOMPurify from 'isomorphic-dompurify';
 
 /** Maximum allowed length for user input */
 const MAX_USER_INPUT_LENGTH = 500;
@@ -44,8 +45,8 @@ export function sanitizeUserInput(input: string): string {
 
 /**
  * Validates and sanitizes AI-generated text before rendering.
- * Strips any HTML that Gemini might have included, removes script tags,
- * and enforces maximum length.
+ * Uses DOMPurify to strip any malicious scripts, iframes, and styling 
+ * while safely retaining text operators (like < and >).
  * @param response - Raw AI response string
  * @returns Sanitized string safe for rendering
  */
@@ -54,11 +55,14 @@ export function sanitizeAIResponse(response: string): string {
     return '';
   }
 
-  return response
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
-    .replace(/<[^>]*>/g, '')
+  // Use DOMPurify for context-aware HTML sanitization
+  const safeHTML = DOMPurify.sanitize(response, {
+    // Optional: If you want to strictly emulate the original catch-all regex
+    // and allow NO html tags at all, uncomment the line below:
+    // ALLOWED_TAGS: [] 
+  });
+
+  return safeHTML
     .replace(/\*/g, '') // Strip asterisks (markdown bold/italic) for cleaner text
     .substring(0, MAX_AI_RESPONSE_LENGTH)
     .trim();
