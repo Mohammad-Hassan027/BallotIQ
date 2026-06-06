@@ -37,7 +37,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950 text-gray-200 selection:bg-blue-500/30 overflow-x-hidden">
+    <div className="bg-gradient-to-br from-blue-50 via-blue-300 to-blue-600 text-gray-200 selection:bg-blue-500/30 overflow-x-hidden">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg">Skip to main content</a>
       <div className="min-h-screen flex flex-col relative">
         {/* Navigation */}
