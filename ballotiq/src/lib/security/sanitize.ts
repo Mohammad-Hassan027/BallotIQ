@@ -3,7 +3,16 @@
  * and AI-generated content before rendering.
  * Prevents XSS attacks and prompt injection.
  */
-import DOMPurify from 'isomorphic-dompurify';
+// Lazy load DOMPurify only on client-side to prevent Next.js SSR / JSDOM bundle resolution errors
+let DOMPurifyInstance: any = null;
+if (typeof window !== 'undefined') {
+  try {
+    const imported = require('isomorphic-dompurify');
+    DOMPurifyInstance = imported.default || imported;
+  } catch (err) {
+    console.error('Failed to load isomorphic-dompurify on client:', err);
+  }
+}
 
 /** Maximum allowed length for user input */
 const MAX_USER_INPUT_LENGTH = 500;
@@ -55,12 +64,18 @@ export function sanitizeAIResponse(response: string): string {
     return '';
   }
 
-  // Use DOMPurify for context-aware HTML sanitization
-  const safeHTML = DOMPurify.sanitize(response, {
-    // Optional: If you want to strictly emulate the original catch-all regex
-    // and allow NO html tags at all, uncomment the line below:
-    // ALLOWED_TAGS: [] 
-  });
+  // Use DOMPurify for context-aware HTML sanitization if running on the client
+  let safeHTML = response;
+  if (DOMPurifyInstance) {
+    safeHTML = DOMPurifyInstance.sanitize(response, {
+      // Optional: If you want to strictly emulate the original catch-all regex
+      // and allow NO html tags at all, uncomment the line below:
+      // ALLOWED_TAGS: [] 
+    });
+  } else {
+    // Basic server-side fallback to strip script tags
+    safeHTML = response.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  }
 
   return safeHTML
     .replace(/\*/g, '') // Strip asterisks (markdown bold/italic) for cleaner text

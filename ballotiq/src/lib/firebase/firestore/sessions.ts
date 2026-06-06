@@ -1,7 +1,7 @@
-import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getFirestoreDB, authReady } from '../client';
 import { logger } from '@/lib/logger';
-import type { UserContext, UserProgress, ChatMessage } from '@/types';
+import type { UserContext, UserProgress, ChatMessage, ConversationMetadata } from '@/types';
 
 /**
  * Saves or updates user session context in Firestore.
@@ -94,5 +94,73 @@ export async function getChatHistory(sessionId: string): Promise<ChatMessage[]> 
   } catch (error) {
     console.error('[Firestore] Failed to get chat history:', error);
     return [];
+  }
+}
+
+/**
+ * Saves or updates conversation metadata in Firestore.
+ */
+export async function saveConversationMetadata(metadata: ConversationMetadata): Promise<void> {
+  try {
+    await authReady;
+    const db = getFirestoreDB();
+    const ref = doc(db, 'sessions', metadata.id);
+    await setDoc(ref, metadata, { merge: true });
+  } catch (error) {
+    logger.error('[Firestore] Failed to save conversation metadata:', error, { component: 'Firestore' });
+  }
+}
+
+/**
+ * Retrieves all conversations belonging to a user from Firestore.
+ */
+export async function getUserConversations(userId: string): Promise<ConversationMetadata[]> {
+  try {
+    await authReady;
+    const db = getFirestoreDB();
+    const sessionsRef = collection(db, 'sessions');
+    const q = query(sessionsRef, where('userId', '==', userId));
+    const snap = await getDocs(q);
+    // Sort on client side to avoid needing a custom composite index in Firestore
+    return snap.docs
+      .map((d) => d.data() as ConversationMetadata)
+      // Filter out documents that don't have metadata (like old test data without userId)
+      .filter((conv) => !!conv.id && !!conv.userId)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  } catch (error) {
+    logger.error('[Firestore] Failed to get user conversations:', error, { component: 'Firestore' });
+    return [];
+  }
+}
+
+/**
+ * Deletes a conversation session from Firestore.
+ */
+export async function deleteConversation(sessionId: string): Promise<void> {
+  try {
+    await authReady;
+    const db = getFirestoreDB();
+    // Delete the root session document
+    const ref = doc(db, 'sessions', sessionId);
+    await deleteDoc(ref);
+  } catch (error) {
+    logger.error('[Firestore] Failed to delete conversation:', error, { component: 'Firestore' });
+  }
+}
+
+/**
+ * Renames a conversation session in Firestore.
+ */
+export async function renameConversation(sessionId: string, newTitle: string): Promise<void> {
+  try {
+    await authReady;
+    const db = getFirestoreDB();
+    const ref = doc(db, 'sessions', sessionId);
+    await updateDoc(ref, { 
+      title: newTitle, 
+      updatedAt: new Date().toISOString() 
+    });
+  } catch (error) {
+    logger.error('[Firestore] Failed to rename conversation:', error, { component: 'Firestore' });
   }
 }

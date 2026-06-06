@@ -5,11 +5,11 @@
  * Full page chat with user context from assessment and learning.
  */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
 import Image from 'next/image';
-import type { UserContext, ElectionStep } from '@/types';
+import type { UserContext, ElectionStep, ConversationMetadata } from '@/types';
 import { useTTS } from '@/hooks/useTTS';
 import { getFallbackGuide } from '@/lib/gemini/fallback';
 import ChatWindow from '@/components/Assistant/ChatWindow';
@@ -19,12 +19,42 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import TranslatedText from '@/components/ui/TranslatedText';
 import { getCountryByCode } from '@/lib/constants/countries';
 import BottomNav from '@/components/ui/BottomNav';
+import ChatSidebar from '@/components/Assistant/ChatSidebar';
+import {
+  getUserConversations,
+  deleteConversation,
+  renameConversation,
+  getUserContext,
+  saveUserContext,
+  saveConversationMetadata
+} from '@/lib/firebase/firestore';
+import { generateUUID } from '@/lib/utils';
 
 /** Full-page AI assistant with context-aware responses */
 export default function AssistantPage() {
   const router = useRouter();
   const [userContext, setUserContext] = useState<UserContext | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [conversations, setConversations] = useState<ConversationMetadata[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('ballotiq_session_id') || '';
+      setUserId(storedUserId);
+    }
+  }, []);
+
+  const loadConversations = useCallback(async () => {
+    if (!userId) return;
+    const list = await getUserConversations(userId);
+    setConversations(list);
+  }, [userId]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [userId, loadConversations]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('ballotiq_context');
@@ -57,6 +87,66 @@ export default function AssistantPage() {
     userContext?.sessionId ?? ''
   );
 
+  const handleNewChat = async () => {
+    if (!userContext || !userId) return;
+    const newSessionId = generateUUID();
+    const newContext: UserContext = {
+      ...userContext,
+      sessionId: newSessionId,
+      consecutiveErrors: 0,
+      adaptationActive: false,
+    };
+    sessionStorage.setItem('ballotiq_context', JSON.stringify(newContext));
+    setUserContext(newContext);
+    await saveUserContext(newContext);
+
+    const newConv: ConversationMetadata = {
+      id: newSessionId,
+      userId,
+      title: 'New Conversation',
+      countryCode: userContext.countryCode,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await saveConversationMetadata(newConv);
+    setConversations((prev) => [newConv, ...prev]);
+    setSidebarOpen(false);
+  };
+
+  const handleSelectConversation = async (id: string) => {
+    const restoredContext = await getUserContext(id);
+    if (restoredContext) {
+      sessionStorage.setItem('ballotiq_context', JSON.stringify(restoredContext));
+      setUserContext(restoredContext);
+    } else {
+      if (userContext) {
+        const fallbackContext = { ...userContext, sessionId: id };
+        sessionStorage.setItem('ballotiq_context', JSON.stringify(fallbackContext));
+        setUserContext(fallbackContext);
+      }
+    }
+  };
+
+  const handleDeleteConversation = async (id: string) => {
+    await deleteConversation(id);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (userContext?.sessionId === id) {
+      const remaining = conversations.filter((c) => c.id !== id);
+      if (remaining.length > 0) {
+        await handleSelectConversation(remaining[0].id);
+      } else {
+        await handleNewChat();
+      }
+    }
+  };
+
+  const handleRenameConversation = async (id: string, newTitle: string) => {
+    await renameConversation(id, newTitle);
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, title: newTitle, updatedAt: new Date().toISOString() } : c))
+    );
+  };
+
   if (!mounted || !userContext) return null;
 
   const countryInfo = getCountryByCode(userContext.countryCode);
@@ -75,14 +165,22 @@ export default function AssistantPage() {
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             </button>
 
-            <h1 className="text-base sm:text-lg font-black text-white tracking-tight leading-none whitespace-nowrap">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2.5 rounded-2xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all shadow-sm flex-shrink-0 md:hidden"
+              aria-label="Toggle history"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <h1 className="text-sm sm:text-lg font-black text-white tracking-tight leading-none whitespace-nowrap hidden xs:block">
               <TranslatedText text="Assistant" />
             </h1>
 
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner">
-                <Image 
-                  src={`https://flagcdn.com/w80/${userContext.countryCode.toLowerCase()}.png`} 
+                <Image
+                  src={`https://flagcdn.com/w80/${userContext.countryCode.toLowerCase()}.png`}
                   alt={`Flag of ${userContext.countryName}`}
                   width={80}
                   height={50}
@@ -126,17 +224,31 @@ export default function AssistantPage() {
         </p>
       </div>
 
-      {/* Chat — takes all remaining space, with bottom padding for BottomNav on mobile */}
-      <div className="flex-1 overflow-hidden max-w-7xl w-full mx-auto px-0 md:px-6 pb-[60px] md:pb-4">
-        <ErrorBoundary componentName="AssistantPage">
-          <ChatWindow
-            userContext={userContext}
-            completedSteps={completedSteps}
-            isSpeaking={isSpeaking}
-            currentSpokenText={currentText}
-            onSpeak={toggleTTS}
-          />
-        </ErrorBoundary>
+      {/* Main Section containing Chat Sidebar and Active Chat */}
+      <div className="flex-1 flex overflow-hidden w-full max-w-[1600px] mx-auto pb-[60px] md:pb-0">
+        <ChatSidebar
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+          conversations={conversations}
+          activeConversationId={userContext.sessionId}
+          onSelectConversation={handleSelectConversation}
+          onDeleteConversation={handleDeleteConversation}
+          onRenameConversation={handleRenameConversation}
+          onNewChat={handleNewChat}
+        />
+
+        <div className="flex-1 overflow-hidden px-0 md:px-6 py-4 flex flex-col h-full">
+          <ErrorBoundary componentName="AssistantPage">
+            <ChatWindow
+              userContext={userContext}
+              completedSteps={completedSteps}
+              isSpeaking={isSpeaking}
+              currentSpokenText={currentText}
+              onSpeak={toggleTTS}
+              onConversationUpdated={loadConversations}
+            />
+          </ErrorBoundary>
+        </div>
       </div>
 
       {/* BottomNav only on mobile — fixed at bottom */}

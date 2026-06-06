@@ -12,10 +12,10 @@ describe('useSTT', () => {
     continuous = false;
     interimResults = false;
     lang = 'en-US';
-    onstart = null;
-    onresult = null;
-    onerror = null;
-    onend = null;
+    onstart: any = null;
+    onresult: any = null;
+    onerror: any = null;
+    onend: any = null;
     start = jest.fn().mockImplementation(function(this: MockSpeechRecognition) {
       if (this.onstart) (this.onstart as () => void)();
     });
@@ -97,7 +97,7 @@ describe('useSTT', () => {
             length: 1,
           },
         };
-        mockRecognitionInstance.onresult(event);
+        mockRecognitionInstance.onresult?.(event as any);
       });
 
       expect(result.current.transcript).toBe('hello world');
@@ -113,7 +113,7 @@ describe('useSTT', () => {
       expect(result.current.isListening).toBe(true);
 
       act(() => {
-        mockRecognitionInstance.onend();
+        mockRecognitionInstance.onend?.();
       });
       expect(result.current.isListening).toBe(false);
     });
@@ -122,7 +122,7 @@ describe('useSTT', () => {
       const { result } = renderHook(() => useSTT());
       
       act(() => {
-        mockRecognitionInstance.onerror({ error: 'not-allowed' });
+        mockRecognitionInstance.onerror?.({ error: 'not-allowed' } as any);
       });
 
       expect(result.current.error).toBe('not-allowed');

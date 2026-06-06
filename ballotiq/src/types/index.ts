@@ -153,3 +153,14 @@ export interface CacheEntry<T> {
   cachedAt: string;
   expiresAt: string;
 }
+
+/** Metadata for a chat conversation session */
+export interface ConversationMetadata {
+  id: string;          // The conversation's sessionId
+  userId: string;      // The user's stable ID (from localStorage: ballotiq_session_id)
+  title: string;       // Auto-generated title or custom renamed title
+  countryCode: string; // The country of this conversation context
+  createdAt: string;   // ISO timestamp
+  updatedAt: string;   // ISO timestamp
+}
+
