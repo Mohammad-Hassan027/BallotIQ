@@ -5,6 +5,7 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { TranslationProvider } from '@/context/TranslationContext';
 import StartupDiagnostics from '@/components/ui/StartupDiagnostics';
 import './globals.css';
+import BackToTop from '@/components/BackToTop';
 
 const sora = Sora({
   subsets: ['latin'],
@@ -61,6 +62,7 @@ export default function RootLayout({
             aria-atomic="true"
             className="sr-only"
           />
+          <BackToTop />
         </TranslationProvider>
       </body>
     </html>
