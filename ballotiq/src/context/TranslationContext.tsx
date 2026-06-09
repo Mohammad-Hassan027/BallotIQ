@@ -9,6 +9,8 @@ import taLocales from '@/locales/ta.json';
 import deLocales from '@/locales/de.json';
 import arLocales from '@/locales/ar.json';
 import frLocales from '@/locales/fr.json';
+import teLocales from '@/locales/te.json';
+import esLocales from '@/locales/es.json';
 
 const DICTIONARIES: Record<string, Record<string, string>> = {
   hi: hiLocales,
@@ -16,6 +18,8 @@ const DICTIONARIES: Record<string, Record<string, string>> = {
   de: deLocales,
   ar: arLocales,
   fr: frLocales,
+  te: teLocales,
+  es: esLocales,
 };
 
 interface TranslationContextType {

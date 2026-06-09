@@ -75,7 +75,7 @@ export default function HomePage() {
               </div>
 
               <h1 className={`font-black text-white tracking-tighter font-heading ${
-                language === 'ta'
+                language === 'ta' || language === 'te'
                   ? 'text-4xl sm:text-5xl lg:text-6xl leading-[1.25]'
                   : language === 'hi'
                     ? 'text-4xl sm:text-5xl lg:text-7xl leading-[1.25]'
