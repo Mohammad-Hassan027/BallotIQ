@@ -7,8 +7,9 @@
 import {
   getRateLimitState,
   saveRateLimitState,
-} from '@/lib/firebase/firestore';
-import type { RateLimitState } from '@/types';
+  atomicIncrementUsage,
+} from "@/lib/firebase/firestore";
+import type { RateLimitState } from "@/types";
 
 /** Daily API call limits per service */
 const DAILY_LIMITS = {
@@ -30,9 +31,9 @@ export type APIService = keyof typeof DAILY_LIMITS;
  */
 export async function checkRateLimit(
   sessionId: string,
-  service: APIService
+  service: APIService,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: string }> {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const resetAt = getNextMidnight();
 
   try {
@@ -52,7 +53,7 @@ export async function checkRateLimit(
 
     const usageKey = `${service}CallsToday` as keyof Pick<
       RateLimitState,
-      'geminiCallsToday' | 'translateCallsToday' | 'ttsCallsToday'
+      "geminiCallsToday" | "translateCallsToday" | "ttsCallsToday"
     >;
     const currentUsage = state[usageKey];
     const limit = DAILY_LIMITS[service];
@@ -64,7 +65,7 @@ export async function checkRateLimit(
       resetAt,
     };
   } catch (error) {
-    console.error('[RateLimit] Failed to check rate limit:', error);
+    console.error("[RateLimit] Failed to check rate limit:", error);
     return { allowed: true, remaining: DAILY_LIMITS[service], resetAt };
   }
 }
@@ -76,42 +77,16 @@ export async function checkRateLimit(
  */
 export async function incrementUsage(
   sessionId: string,
-  service: APIService
+  service: APIService,
 ): Promise<void> {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
+  const usageKey = `${service}CallsToday` as const;
 
   try {
-    const state = await getRateLimitState(sessionId);
-    const current: RateLimitState = state ?? {
-      sessionId,
-      geminiCallsToday: 0,
-      translateCallsToday: 0,
-      ttsCallsToday: 0,
-      lastReset: today,
-    };
-
-    if (current.lastReset !== today) {
-      current.geminiCallsToday = 0;
-      current.translateCallsToday = 0;
-      current.ttsCallsToday = 0;
-      current.lastReset = today;
-    }
-
-    switch (service) {
-      case 'gemini':
-        current.geminiCallsToday += 1;
-        break;
-      case 'translate':
-        current.translateCallsToday += 1;
-        break;
-      case 'tts':
-        current.ttsCallsToday += 1;
-        break;
-    }
-
-    await saveRateLimitState(current);
+    // 2. Delegate to the atomic transaction to prevent concurrent race conditions
+    await atomicIncrementUsage(sessionId, usageKey, today);
   } catch (error) {
-    console.error('[RateLimit] Failed to increment usage:', error);
+    console.error("[RateLimit] Failed to increment usage:", error);
   }
 }
 
@@ -124,10 +99,9 @@ export async function incrementUsage(
 export function getRateLimitMessage(service: APIService): string {
   const messages: Record<APIService, string> = {
     gemini:
-      'AI requests limit reached for today. Content will load from our verified cache. Resets at midnight.',
-    translate:
-      'Translation limit reached for today. Resets at midnight.',
-    tts: 'Text-to-speech limit reached for today. Resets at midnight.',
+      "AI requests limit reached for today. Content will load from our verified cache. Resets at midnight.",
+    translate: "Translation limit reached for today. Resets at midnight.",
+    tts: "Text-to-speech limit reached for today. Resets at midnight.",
   };
   return messages[service];
 }
