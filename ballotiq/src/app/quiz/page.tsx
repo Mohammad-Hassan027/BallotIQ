@@ -131,7 +131,7 @@ export default function QuizPage() {
         </div>
       </header>
 
-      <div id="main-content" tabIndex={-1} className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 outline-none">
+      <div id="main-content" tabIndex={-1} className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-24 md:py-8 outline-none">
         <ErrorBoundary componentName="QuizPage">
           {loading ? (
             <div className="space-y-6">

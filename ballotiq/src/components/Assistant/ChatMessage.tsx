@@ -32,7 +32,7 @@ export default function ChatMessage({
           <Bot className="w-4.5 h-4.5 text-blue-400" />
         </div>
       )}
-      <div className={`max-w-[92%] sm:max-w-[85%] px-4 sm:px-5 py-3.5 rounded-2xl text-sm sm:text-[15px] leading-relaxed backdrop-blur-xl transition-all ${
+      <div className={`max-w-[80%] sm:max-w-[85%] px-4 sm:px-5 py-3.5 rounded-2xl text-sm sm:text-[15px] leading-relaxed backdrop-blur-xl transition-all ${
         message.role === 'user'
           ? 'bg-blue-600 text-white rounded-tr-md shadow-lg shadow-blue-500/20'
           : 'bg-white/[0.03] border border-white/10 text-gray-100 rounded-tl-md'

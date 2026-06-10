@@ -108,11 +108,12 @@ export default function LanguageSelector({ className = '' }: LanguageSelectorPro
           if (e.key === 'Escape') setIsOpen(false);
         }}
         className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-gray-200 hover:bg-white/10 hover:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
+        className="flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-gray-200 hover:bg-white/10 hover:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
         aria-label="Change language"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <Globe className="w-4 h-4 text-blue-400" aria-hidden="true" />
+        <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" aria-hidden="true" />
         <span className="font-medium">{currentLang.nativeName}</span>
         <ChevronDown 
           className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 

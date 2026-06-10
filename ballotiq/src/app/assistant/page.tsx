@@ -1,28 +1,60 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+/**
+ * AI Assistant page — context-aware election Q&A.
+ * Full page chat with user context from assessment and learning.
+ */
+
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Shield, Info } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
 import Image from 'next/image';
-
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import TranslatedText from '@/components/ui/TranslatedText';
-import LanguageSelector from '@/components/ui/LanguageSelector';
-import KnowledgeMeter from '@/components/Assessment/KnowledgeMeter';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import ChatWindow from '@/components/Assistant/ChatWindow';
-import BottomNav from '@/components/ui/BottomNav';
-
-import type { UserContext, ElectionStep } from '@/types';
+import type { UserContext, ElectionStep, ConversationMetadata } from '@/types';
 import { useTTS } from '@/hooks/useTTS';
 import { getFallbackGuide } from '@/lib/gemini/fallback';
+import ChatWindow from '@/components/Assistant/ChatWindow';
+import KnowledgeMeter from '@/components/Assessment/KnowledgeMeter';
+import LanguageSelector from '@/components/ui/LanguageSelector';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import TranslatedText from '@/components/ui/TranslatedText';
 import { getCountryByCode } from '@/lib/constants/countries';
+import BottomNav from '@/components/ui/BottomNav';
+import ChatSidebar from '@/components/Assistant/ChatSidebar';
+import {
+  getUserConversations,
+  deleteConversation,
+  renameConversation,
+  getUserContext,
+  saveUserContext,
+  saveConversationMetadata
+} from '@/lib/firebase/firestore';
+import { generateUUID } from '@/lib/utils';
 
+/** Full-page AI assistant with context-aware responses */
 export default function AssistantPage() {
   const router = useRouter();
   const [userContext, setUserContext] = useState<UserContext | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [conversations, setConversations] = useState<ConversationMetadata[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('ballotiq_session_id') || '';
+      setUserId(storedUserId);
+    }
+  }, []);
+
+  const loadConversations = useCallback(async () => {
+    if (!userId) return;
+    const list = await getUserConversations(userId);
+    setConversations(list);
+  }, [userId]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [userId, loadConversations]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('ballotiq_context');
@@ -49,80 +81,178 @@ export default function AssistantPage() {
     return getFallbackGuide(userContext.countryCode, userContext.knowledgeLevel) ?? [];
   }, [userContext]);
 
+  const isOpenChat = userContext?.mainConfusion === 'Direct query';
+
   const { isSpeaking, currentText, toggle: toggleTTS } = useTTS(
     userContext?.sessionId ?? ''
   );
+
+  const handleNewChat = async () => {
+    if (!userContext || !userId) return;
+    const newSessionId = generateUUID();
+    const newContext: UserContext = {
+      ...userContext,
+      sessionId: newSessionId,
+      consecutiveErrors: 0,
+      adaptationActive: false,
+    };
+    sessionStorage.setItem('ballotiq_context', JSON.stringify(newContext));
+    setUserContext(newContext);
+    await saveUserContext(newContext);
+
+    const newConv: ConversationMetadata = {
+      id: newSessionId,
+      userId,
+      title: 'New Conversation',
+      countryCode: userContext.countryCode,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await saveConversationMetadata(newConv);
+    setConversations((prev) => [newConv, ...prev]);
+    setSidebarOpen(false);
+  };
+
+  const handleSelectConversation = async (id: string) => {
+    const restoredContext = await getUserContext(id);
+    if (restoredContext) {
+      sessionStorage.setItem('ballotiq_context', JSON.stringify(restoredContext));
+      setUserContext(restoredContext);
+    } else {
+      if (userContext) {
+        const fallbackContext = { ...userContext, sessionId: id };
+        sessionStorage.setItem('ballotiq_context', JSON.stringify(fallbackContext));
+        setUserContext(fallbackContext);
+      }
+    }
+  };
+
+  const handleDeleteConversation = async (id: string) => {
+    await deleteConversation(id);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (userContext?.sessionId === id) {
+      const remaining = conversations.filter((c) => c.id !== id);
+      if (remaining.length > 0) {
+        await handleSelectConversation(remaining[0].id);
+      } else {
+        await handleNewChat();
+      }
+    }
+  };
+
+  const handleRenameConversation = async (id: string, newTitle: string) => {
+    await renameConversation(id, newTitle);
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, title: newTitle, updatedAt: new Date().toISOString() } : c))
+    );
+  };
 
   if (!mounted || !userContext) return null;
 
   const countryInfo = getCountryByCode(userContext.countryCode);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background bg-grain selection:bg-indigo-500/30 overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950 text-gray-200 selection:bg-blue-500/30 overflow-hidden">
       {/* Header */}
-      <nav className="sticky top-0 z-50 glass border-b border-white/5 px-4 h-16 sm:h-20 flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-10 w-10 p-0 rounded-full">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-white text-black rounded-lg flex items-center justify-center font-bold">B</div>
-             <div className="hidden sm:block">
-                <h1 className="text-sm font-bold text-white tracking-tight leading-none font-heading">AI Assistant</h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Context: {userContext.countryName}</p>
-             </div>
+      <header className="sticky top-0 z-50 flex-shrink-0 bg-gray-950/80 backdrop-blur-xl border-b border-white/5 shadow-2xl">
+        <div className="max-w-[1600px] mx-auto px-4 h-16 sm:h-20 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <button
+              onClick={() => router.back()}
+              className="p-2.5 rounded-2xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all group shadow-sm flex-shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2.5 rounded-2xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all shadow-sm flex-shrink-0 md:hidden"
+              aria-label="Toggle history"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <h1 className="text-sm sm:text-lg font-black text-white tracking-tight leading-none whitespace-nowrap hidden xs:block">
+              <TranslatedText text="Assistant" />
+            </h1>
+
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner">
+                <Image
+                  src={`https://flagcdn.com/w80/${userContext.countryCode.toLowerCase()}.png`}
+                  alt={`Flag of ${userContext.countryName}`}
+                  width={80}
+                  height={50}
+                  unoptimized
+                  className="w-5 h-3.5 object-cover rounded-sm"
+                />
+                <span className="text-sm font-bold text-white tracking-tight leading-none whitespace-nowrap truncate max-w-[80px] sm:max-w-none">
+                  <TranslatedText text={userContext.countryName} />
+                </span>
+              </div>
+              {!isOpenChat && (
+                <div className="hidden sm:block">
+                  <KnowledgeMeter level={userContext.knowledgeLevel} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 text-xs font-medium text-blue-400/80">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <TranslatedText text="BallotIQ AI Active" />
+            </div>
+            <LanguageSelector />
           </div>
         </div>
+      </header>
 
-        <div className="flex items-center gap-4">
-           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-white/10">
-              <Image
-                src={`https://flagcdn.com/w80/${userContext.countryCode.toLowerCase()}.png`}
-                alt={userContext.countryName}
-                width={20}
-                height={14}
-                unoptimized
-                className="object-cover rounded-sm"
-              />
-              <span className="text-xs font-bold text-white tracking-tight">{userContext.countryName}</span>
-              <div className="w-px h-3 bg-white/10 mx-1" />
-              <KnowledgeMeter level={userContext.knowledgeLevel} compact />
-           </div>
-           
-           <Button variant="glass" size="sm" onClick={() => router.push('/polling-stations')}>
-              <MapPin className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Stations</span>
-           </Button>
-           
-           <LanguageSelector />
+      {/* Disclaimer */}
+      <div className="flex-shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-500/5 border-b border-amber-500/10">
+        <p className="text-[10px] sm:text-[11px] text-amber-400/80 text-center max-w-2xl mx-auto leading-snug">
+          <TranslatedText text="BallotIQ provides educational information only. For official guidance, visit" />{' '}
+          <a
+            href={countryInfo?.electionBodyUrl || `https://www.google.com/search?q=${userContext.countryName}+election+commission`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-amber-300 font-bold"
+          >
+            <TranslatedText text={countryInfo?.electionBody || "your official election body"} />
+          </a>.
+        </p>
+      </div>
+
+      {/* Main Section containing Chat Sidebar and Active Chat */}
+      <div className="flex-1 flex overflow-hidden w-full max-w-[1600px] mx-auto pb-[60px] md:pb-0">
+        <ChatSidebar
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+          conversations={conversations}
+          activeConversationId={userContext.sessionId}
+          onSelectConversation={handleSelectConversation}
+          onDeleteConversation={handleDeleteConversation}
+          onRenameConversation={handleRenameConversation}
+          onNewChat={handleNewChat}
+        />
+
+        <div className="flex-1 overflow-hidden px-0 md:px-6 py-4 flex flex-col h-full">
+          <ErrorBoundary componentName="AssistantPage">
+            <ChatWindow
+              userContext={userContext}
+              completedSteps={completedSteps}
+              isSpeaking={isSpeaking}
+              currentSpokenText={currentText}
+              onSpeak={toggleTTS}
+              onConversationUpdated={loadConversations}
+            />
+          </ErrorBoundary>
         </div>
-      </nav>
-
-      {/* Warning/Disclaimer bar */}
-      <div className="bg-indigo-500/5 border-b border-indigo-500/10 px-4 py-2">
-         <div className="max-w-4xl mx-auto flex items-center justify-center gap-2">
-            <Info className="w-3 h-3 text-indigo-400" />
-            <p className="text-[10px] sm:text-[11px] text-indigo-300/80">
-              Educational information only. Visit <a href={countryInfo?.electionBodyUrl} target="_blank" className="font-bold underline hover:text-indigo-200">{countryInfo?.electionBody || 'Official Site'}</a> for legal guidance.
-            </p>
-         </div>
       </div>
 
-      <main className="flex-1 flex flex-col relative z-10 max-w-5xl w-full mx-auto px-4 md:px-6">
-        <ErrorBoundary componentName="AssistantPage">
-          <ChatWindow
-            userContext={userContext}
-            completedSteps={completedSteps}
-            isSpeaking={isSpeaking}
-            currentSpokenText={currentText}
-            onSpeak={toggleTTS}
-          />
-        </ErrorBoundary>
-      </main>
-
-      <div className="md:hidden">
-         <BottomNav activeTab="assistant" countryCode={userContext.countryCode} />
-      </div>
+      {/* BottomNav only on mobile — fixed at bottom */}
+      <BottomNav activeTab="assistant" countryCode={userContext.countryCode} />
     </div>
   );
 }

@@ -1,19 +1,22 @@
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { Sora, Inter } from 'next/font/google';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { TranslationProvider } from '@/context/TranslationContext';
 import StartupDiagnostics from '@/components/ui/StartupDiagnostics';
 import './globals.css';
+import BackToTop from '@/components/BackToTop';
 
-const inter = Inter({ 
+const sora = Sora({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sora',
+  display: 'swap',
 });
 
-const plusJakarta = Plus_Jakarta_Sans({ 
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-plus-jakarta',
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -21,6 +24,34 @@ export const metadata: Metadata = {
   description: 'Understand your vote. Shape your future. BallotIQ is an adaptive AI tutor that personalizes election education based on your knowledge level, country, and language.',
   keywords: ['election', 'voting', 'civic education', 'democracy', 'BallotIQ'],
   authors: [{ name: 'BallotIQ Team' }],
+  icons: {
+    icon: '/favicon/favicon.ico',
+    shortcut: '/favicon/favicon-32x32.png',
+    apple: '/favicon/apple-touch-icon.png',
+    other: [
+      {
+        rel: 'icon',
+        url: '/favicon/favicon-16x16.png',
+        sizes: '16x16',
+      },
+      {
+        rel: 'icon',
+        url: '/favicon/favicon-32x32.png',
+        sizes: '32x32',
+      },
+      {
+        rel: 'icon',
+        url: '/favicon/android-chrome-192x192.png',
+        sizes: '192x192',
+      },
+      {
+        rel: 'icon',
+        url: '/favicon/android-chrome-512x512.png',
+        sizes: '512x512',
+      },
+    ],
+  },
+  manifest: '/favicon/site.webmanifest',
   openGraph: {
     title: 'BallotIQ — Personalized Election Education',
     description: 'AI-powered adaptive learning for election processes worldwide.',
@@ -34,8 +65,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} ${plusJakarta.variable} font-sans min-h-screen bg-background text-foreground antialiased bg-grain`}>
+    <html lang="en" className={`dark ${sora.variable} ${inter.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body className={`font-sans min-h-screen bg-background text-foreground antialiased bg-grain`}>
         <a 
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 
@@ -59,6 +90,7 @@ export default function RootLayout({
             aria-atomic="true"
             className="sr-only"
           />
+          <BackToTop />
         </TranslationProvider>
       </body>
     </html>
