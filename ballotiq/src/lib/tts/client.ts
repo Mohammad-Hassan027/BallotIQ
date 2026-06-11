@@ -7,6 +7,7 @@
 import { checkRateLimit, incrementUsage } from '@/lib/security/rateLimit';
 
 const audioCache = new Map<string, string>();
+const MAX_CACHE_SIZE = 50; // Cap cache to prevent memory leaks from large base64 strings
 let currentAudio: HTMLAudioElement | null = null;
 
 const API_KEY = process.env.NEXT_PUBLIC_TTS_API_KEY ?? '';
@@ -47,6 +48,13 @@ export async function synthesizeSpeech(
     if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
 
     const data = await response.json() as { audioContent: string };
+    
+    // Manage cache size
+    if (audioCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = audioCache.keys().next().value;
+      if (firstKey) audioCache.delete(firstKey);
+    }
+    
     audioCache.set(cacheKey, data.audioContent);
     await incrementUsage(sessionId ?? 'tts', 'tts');
     return data.audioContent;

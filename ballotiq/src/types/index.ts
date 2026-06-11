@@ -160,6 +160,7 @@ export interface ConversationMetadata {
   userId: string;      // The user's stable ID (from localStorage: ballotiq_session_id)
   title: string;       // Auto-generated title or custom renamed title
   countryCode: string; // The country of this conversation context
+  conversationSummary?: string; // Concise summary of the long-term context
   createdAt: string;   // ISO timestamp
   updatedAt: string;   // ISO timestamp
 }

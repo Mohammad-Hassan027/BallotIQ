@@ -11,6 +11,38 @@ import { logger } from '@/lib/logger';
 import { callGemini, isGeminiEnabled } from './core';
 import { sanitizeUserInput } from '@/lib/security/sanitize';
 
+import { getConversationMetadata, saveConversationMetadata } from '@/lib/firebase/firestore';
+
+/**
+ * Summarizes the conversation to maintain long-term context.
+ */
+async function summarizeConversation(
+  sessionId: string,
+  oldSummary: string | undefined,
+  messagesToSummarize: ChatMessage[]
+): Promise<string> {
+  try {
+    const historyText = messagesToSummarize.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+    const prompt = `Update the following concise summary (max 100 words) of a conversation between a user and an election assistant by incorporating the oldest messages provided. Focus on key topics discussed, the user's country context, and specific election procedures explained.
+Current Summary: ${oldSummary || 'None'}
+Oldest Messages to incorporate:
+${historyText}
+New Summary:`;
+
+    const newSummary = await callGemini(
+      prompt, 
+      sessionId, 
+      true, 
+      "You are a helpful assistant that summarizes conversations accurately and concisely. Maintain all important civic context and previous answers provided to the user.", 
+      150
+    );
+    return newSummary?.trim() || oldSummary || '';
+  } catch (err) {
+    logger.error('Summarization failed', err as Error, { sessionId });
+    return oldSummary || '';
+  }
+}
+
 /**
  * Conversational assistant with full user context.
  */
@@ -33,7 +65,31 @@ export async function askAssistant(
         return 'You\'ve reached the daily AI request limit. Try again tomorrow.';
       }
 
-      const systemPrompt = buildAssistantSystemPrompt(userContext, completedSteps, chatHistory.length);
+      // 1. Fetch current summary if it exists
+      const metadata = await getConversationMetadata(userContext.sessionId);
+      let summary = metadata?.conversationSummary;
+
+      // 2. Trigger Summarization Pipeline if history is long enough
+      // Threshold: 6 messages (3 user/assistant pairs)
+      if (chatHistory.length > 6) {
+        // We summarize everything EXCEPT the last 3 messages (which will be literal context)
+        const toSummarize = chatHistory.slice(0, -3);
+        const newSummary = await summarizeConversation(userContext.sessionId, summary, toSummarize);
+        
+        if (newSummary && newSummary !== summary) {
+          summary = newSummary;
+          // Persist summary back to Firestore
+          if (metadata) {
+            await saveConversationMetadata({
+              ...metadata,
+              conversationSummary: summary,
+              updatedAt: new Date().toISOString()
+            });
+          }
+        }
+      }
+
+      const systemPrompt = buildAssistantSystemPrompt(userContext, completedSteps, chatHistory.length, summary);
       const sanitizedQuestion = sanitizeUserInput(question);
       const userMessage = buildAssistantUserMessage(sanitizedQuestion, chatHistory);
 

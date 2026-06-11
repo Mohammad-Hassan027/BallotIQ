@@ -89,6 +89,16 @@ export function useSTT(language: string = 'en-US', onResult?: (text: string) => 
     };
 
     recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+    };
   }, [language, onResult]);
 
   /**

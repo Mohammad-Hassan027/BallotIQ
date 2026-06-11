@@ -7,6 +7,7 @@ export function buildAssistantSystemPrompt(
   userContext: UserContext,
   completedSteps: ElectionStep[],
   messageCount: number,
+  summary?: string,
 ): string {
   const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
@@ -21,8 +22,12 @@ export function buildAssistantSystemPrompt(
     ? `Start with a single warm, natural sentence greeting them as a ${userContext.knowledgeLevel}-level learner in ${userContext.countryName}. Then answer.`
     : 'Do NOT greet. Get straight to the answer.';
 
+  const longTermMemory = summary 
+    ? `\n\nLONG-TERM MEMORY SUMMARY (Context of previous discussion):\n${summary}\n`
+    : '';
+
   return `You are BallotIQ, a friendly non-partisan election guide for ${userContext.countryName}.
-Current Date: ${currentDate}.
+Current Date: ${currentDate}.${longTermMemory}
 
 CONTEXT: User is ${userContext.knowledgeLevel} level in ${userContext.countryName}. Initial concern: "${userContext.mainConfusion}".
 
@@ -58,7 +63,8 @@ export function buildAssistantUserMessage(
   chatHistory: ChatMessage[],
 ): string {
   const historyArr = Array.isArray(chatHistory) ? chatHistory : [];
-  const recent = historyArr.slice(-4).map((m) => `${m.role}: ${m.content}`).join('\n');
+  // Use last 3 literal messages for immediate context
+  const recent = historyArr.slice(-3).map((m) => `${m.role}: ${m.content}`).join('\n');
 
   return `${recent ? `Recent conversation:\n${recent}\n\n` : ''}<user_input>${question}</user_input>
 

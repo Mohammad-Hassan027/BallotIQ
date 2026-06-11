@@ -118,6 +118,22 @@ export async function saveConversationMetadata(metadata: ConversationMetadata): 
 }
 
 /**
+ * Retrieves conversation metadata for a specific session.
+ */
+export async function getConversationMetadata(sessionId: string): Promise<ConversationMetadata | null> {
+  try {
+    await authReady;
+    const db = getFirestoreDB();
+    const ref = doc(db, 'sessions', sessionId);
+    const snap = await getDoc(ref);
+    return snap.exists() ? (snap.data() as ConversationMetadata) : null;
+  } catch (error) {
+    logger.error('[Firestore] Failed to get conversation metadata:', error, { component: 'Firestore', sessionId });
+    return null;
+  }
+}
+
+/**
  * Retrieves all conversations belonging to a user from Firestore.
  */
 export async function getUserConversations(userId: string): Promise<ConversationMetadata[]> {
