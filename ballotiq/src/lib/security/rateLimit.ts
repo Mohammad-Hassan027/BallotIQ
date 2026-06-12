@@ -8,7 +8,9 @@ import {
   getRateLimitState,
   saveRateLimitState,
   atomicIncrementUsage,
+  isNewDay,
 } from "@/lib/firebase/firestore";
+import { serverTimestamp } from "firebase/firestore";
 import type { RateLimitState } from "@/types";
 
 /** Daily API call limits per service */
@@ -33,19 +35,20 @@ export async function checkRateLimit(
   sessionId: string,
   service: APIService,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: string }> {
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
   const resetAt = getNextMidnight();
 
   try {
     const state = await getRateLimitState(sessionId);
+    const lastResetDate = state?.lastResetAt?.toDate?.() || new Date(0);
 
-    if (!state || state.lastReset !== today) {
+    if (!state || isNewDay(lastResetDate, now)) {
       const freshState: RateLimitState = {
         sessionId,
         geminiCallsToday: 0,
         translateCallsToday: 0,
         ttsCallsToday: 0,
-        lastReset: today,
+        lastResetAt: serverTimestamp(),
       };
       await saveRateLimitState(freshState);
       return { allowed: true, remaining: DAILY_LIMITS[service], resetAt };
@@ -79,12 +82,11 @@ export async function incrementUsage(
   sessionId: string,
   service: APIService,
 ): Promise<void> {
-  const today = new Date().toISOString().split("T")[0];
   const usageKey = `${service}CallsToday` as const;
 
   try {
     // 2. Delegate to the atomic transaction to prevent concurrent race conditions
-    await atomicIncrementUsage(sessionId, usageKey, today);
+    await atomicIncrementUsage(sessionId, usageKey);
   } catch (error) {
     console.error("[RateLimit] Failed to increment usage:", error);
   }

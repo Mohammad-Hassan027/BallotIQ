@@ -1,4 +1,11 @@
-import { doc, setDoc, getDoc, runTransaction } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 import { getFirestoreDB, authReady } from "../client";
 import type { RateLimitState } from "@/types";
 
@@ -43,7 +50,6 @@ export async function getRateLimitState(
 export async function atomicIncrementUsage(
   sessionId: string,
   serviceKey: "geminiCallsToday" | "translateCallsToday" | "ttsCallsToday",
-  today: string,
 ): Promise<void> {
   try {
     await authReady;
@@ -53,6 +59,7 @@ export async function atomicIncrementUsage(
 
     await runTransaction(db, async (transaction) => {
       const snap = await transaction.get(ref);
+      const now = new Date();
 
       if (!snap.exists()) {
         // 1. Brand new session: Create document with initial counts
@@ -61,21 +68,22 @@ export async function atomicIncrementUsage(
           geminiCallsToday: serviceKey === "geminiCallsToday" ? 1 : 0,
           translateCallsToday: serviceKey === "translateCallsToday" ? 1 : 0,
           ttsCallsToday: serviceKey === "ttsCallsToday" ? 1 : 0,
-          lastReset: today,
+          lastResetAt: serverTimestamp(),
         });
         return;
       }
 
       const current = snap.data() as RateLimitState;
+      const lastResetAt = current.lastResetAt as Timestamp;
 
-      if (current.lastReset !== today) {
+      if (!lastResetAt || isNewDay(lastResetAt.toDate(), now)) {
         // 2. Day rolled over: Reset all counters to 0, then add 1 to the requested service
         transaction.set(ref, {
-          ...current, // preserves any other data if present
+          sessionId,
           geminiCallsToday: serviceKey === "geminiCallsToday" ? 1 : 0,
           translateCallsToday: serviceKey === "translateCallsToday" ? 1 : 0,
           ttsCallsToday: serviceKey === "ttsCallsToday" ? 1 : 0,
-          lastReset: today,
+          lastResetAt: serverTimestamp(),
         });
       } else {
         // 3. Same day: Atomically increment the specific service counter
@@ -92,4 +100,15 @@ export async function atomicIncrementUsage(
     );
     throw error;
   }
+}
+
+/**
+ * Helper to determine if a new UTC day has started.
+ */
+export function isNewDay(lastResetDate: Date, now: Date): boolean {
+  return (
+    lastResetDate.getUTCFullYear() !== now.getUTCFullYear() ||
+    lastResetDate.getUTCMonth() !== now.getUTCMonth() ||
+    lastResetDate.getUTCDate() !== now.getUTCDate()
+  );
 }

@@ -144,7 +144,7 @@ export interface RateLimitState {
   geminiCallsToday: number;
   translateCallsToday: number;
   ttsCallsToday: number;
-  lastReset: string;
+  lastResetAt: any;
 }
 
 /** Generic cache entry with TTL */

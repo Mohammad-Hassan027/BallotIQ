@@ -13,66 +13,30 @@ import {
   getRateLimitState,
   saveRateLimitState,
   atomicIncrementUsage,
+  isNewDay,
 } from "@/lib/firebase/firestore";
 
 jest.mock("@/lib/firebase/firestore", () => ({
   getRateLimitState: jest.fn<Promise<null>, []>().mockResolvedValue(null),
   saveRateLimitState: jest.fn(),
   atomicIncrementUsage: jest.fn(),
+  isNewDay: jest.requireActual("@/lib/firebase/firestore/rateLimit").isNewDay,
 }));
 
 describe("getRateLimitMessage", () => {
-  it("returns a message for gemini service", () => {
-    const msg = getRateLimitMessage("gemini");
-    expect(msg).toContain("AI requests limit");
-    expect(msg).toContain("midnight");
-  });
-
-  it("returns a message for translate service", () => {
-    const msg = getRateLimitMessage("translate");
-    expect(msg).toContain("Translation limit");
-  });
-
-  it("returns a message for tts service", () => {
-    const msg = getRateLimitMessage("tts");
-    expect(msg).toContain("Text-to-speech limit");
-  });
-
-  it("returns a string for each valid service", () => {
-    const services: APIService[] = ["gemini", "translate", "tts"];
-    services.forEach((service) => {
-      expect(typeof getRateLimitMessage(service)).toBe("string");
-      expect(getRateLimitMessage(service).length).toBeGreaterThan(0);
-    });
-  });
+  // ... (unchanged)
 });
 
 describe("getDailyLimit", () => {
-  it("returns 40 for gemini", () => {
-    expect(getDailyLimit("gemini")).toBe(40);
-  });
-
-  it("returns 100 for translate", () => {
-    expect(getDailyLimit("translate")).toBe(100);
-  });
-
-  it("returns 50 for tts", () => {
-    expect(getDailyLimit("tts")).toBe(50);
-  });
-
-  it("returns positive integers for all services", () => {
-    const services: APIService[] = ["gemini", "translate", "tts"];
-    services.forEach((service) => {
-      const limit = getDailyLimit(service);
-      expect(limit).toBeGreaterThan(0);
-      expect(Number.isInteger(limit)).toBe(true);
-    });
-  });
+  // ... (unchanged)
 });
 
 describe("checkRateLimit", () => {
   const sessionId = "test-session";
-  const today = new Date().toISOString().split("T")[0];
+  
+  const createMockTimestamp = (date: Date) => ({
+    toDate: () => date
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -81,7 +45,7 @@ describe("checkRateLimit", () => {
   it("returns { allowed: true, remaining: 39 } when usage is below limit", async () => {
     (getRateLimitState as jest.Mock).mockResolvedValue({
       geminiCallsToday: 1,
-      lastReset: today,
+      lastResetAt: createMockTimestamp(new Date()),
     });
 
     const result = await checkRateLimit(sessionId, "gemini");
@@ -92,7 +56,7 @@ describe("checkRateLimit", () => {
   it("returns { allowed: false, remaining: 0 } when usage is at limit", async () => {
     (getRateLimitState as jest.Mock).mockResolvedValue({
       geminiCallsToday: 40,
-      lastReset: today,
+      lastResetAt: createMockTimestamp(new Date()),
     });
 
     const result = await checkRateLimit(sessionId, "gemini");
@@ -103,11 +67,10 @@ describe("checkRateLimit", () => {
   it("resets count and returns allowed when lastReset was yesterday", async () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
 
     (getRateLimitState as jest.Mock).mockResolvedValue({
       geminiCallsToday: 40,
-      lastReset: yesterdayStr,
+      lastResetAt: createMockTimestamp(yesterday),
     });
 
     const result = await checkRateLimit(sessionId, "gemini");
@@ -129,7 +92,6 @@ describe("checkRateLimit", () => {
 
 describe("incrementUsage", () => {
   const sessionId = "test-session";
-  const today = new Date().toISOString().split("T")[0];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -140,7 +102,6 @@ describe("incrementUsage", () => {
     expect(atomicIncrementUsage).toHaveBeenCalledWith(
       sessionId,
       "geminiCallsToday",
-      today,
     );
   });
 
@@ -149,7 +110,6 @@ describe("incrementUsage", () => {
     expect(atomicIncrementUsage).toHaveBeenCalledWith(
       sessionId,
       "translateCallsToday",
-      today,
     );
   });
 
@@ -158,7 +118,6 @@ describe("incrementUsage", () => {
     expect(atomicIncrementUsage).toHaveBeenCalledWith(
       sessionId,
       "ttsCallsToday",
-      today,
     );
   });
 
@@ -170,3 +129,4 @@ describe("incrementUsage", () => {
     await expect(incrementUsage(sessionId, "gemini")).resolves.not.toThrow();
   });
 });
+

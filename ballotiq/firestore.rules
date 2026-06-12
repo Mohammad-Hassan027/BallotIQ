@@ -19,10 +19,42 @@ service cloud.firestore {
     // Rate limits - allow update but prevent tampering with counts from other sessions
     match /rate_limits/{sessionId} {
       allow read: if request.auth != null && request.auth.uid == sessionId;
-      allow write: if request.auth != null
+      
+      allow create: if request.auth != null 
         && request.auth.uid == sessionId
-        && request.resource.data.keys().hasAll(['sessionId', 'lastReset'])
-        && request.resource.data.sessionId == request.auth.uid;
+        && request.resource.data.sessionId == sessionId
+        && request.resource.data.lastResetAt == request.time
+        && request.resource.data.geminiCallsToday <= 1
+        && request.resource.data.translateCallsToday <= 1
+        && request.resource.data.ttsCallsToday <= 1;
+
+      allow update: if request.auth != null
+        && request.auth.uid == sessionId
+        && request.resource.data.sessionId == sessionId
+        && (
+          // Case 1: Same-day increment
+          (request.resource.data.lastResetAt == resource.data.lastResetAt
+           && request.time.year() == resource.data.lastResetAt.year()
+           && request.time.month() == resource.data.lastResetAt.month()
+           && request.time.day() == resource.data.lastResetAt.day()
+           && request.resource.data.geminiCallsToday <= 40
+           && request.resource.data.translateCallsToday <= 100
+           && request.resource.data.ttsCallsToday <= 50
+           && request.resource.data.geminiCallsToday >= resource.data.geminiCallsToday
+           && request.resource.data.translateCallsToday >= resource.data.translateCallsToday
+           && request.resource.data.ttsCallsToday >= resource.data.ttsCallsToday
+          )
+          ||
+          // Case 2: New-day reset
+          (request.resource.data.lastResetAt == request.time
+           && (request.time.year() != resource.data.lastResetAt.year()
+               || request.time.month() != resource.data.lastResetAt.month()
+               || request.time.day() != resource.data.lastResetAt.day())
+           && request.resource.data.geminiCallsToday <= 1
+           && request.resource.data.translateCallsToday <= 1
+           && request.resource.data.ttsCallsToday <= 1
+          )
+        );
     }
 
     // AI Content Caches
