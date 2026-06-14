@@ -10,8 +10,7 @@ import { getCachedGuide, cacheElectionGuide } from '@/lib/firebase/firestore';
 import { authReady } from '@/lib/firebase/client';
 import { withTrace } from '@/lib/firebase/performance';
 import { logger } from '@/lib/logger';
-import { callGemini } from './core';
-import { sanitizeUserInput } from '@/lib/security/sanitize';
+import { callGemini, callGeminiStream } from './core';
 
 /**
  * Generates election steps personalized to user's knowledge level.
@@ -63,3 +62,26 @@ export async function generatePersonalizedGuide(
     }
   );
 }
+
+/**
+ * Generates election steps as a stream.
+ */
+export async function generatePersonalizedGuideStream(
+  countryCode: string,
+  countryName: string,
+  knowledgeLevel: KnowledgeLevel,
+  focusAreas: string[],
+  userConfusion: string,
+  sessionId?: string,
+  stepCount?: number,
+): Promise<ReadableStream<string> | null> {
+  const sanitizedConfusion = sanitizeUserInput(userConfusion);
+  const sanitizedFocusAreas = focusAreas.map(sanitizeUserInput);
+
+  const prompt = buildPersonalizedGuidePrompt(
+    countryCode, countryName, knowledgeLevel, sanitizedFocusAreas, sanitizedConfusion, stepCount
+  );
+
+  return callGeminiStream(prompt, sessionId ?? 'guide', false, undefined, 2048);
+}
+

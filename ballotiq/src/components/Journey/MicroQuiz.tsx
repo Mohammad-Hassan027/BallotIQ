@@ -49,12 +49,26 @@ export default function MicroQuiz({
 }: MicroQuizProps) {
   if (loading && !question) {
     return (
-      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl animate-pulse space-y-4">
-        <div className="h-4 bg-white/10 rounded w-3/4" />
-        <div className="grid grid-cols-1 gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-white/5 rounded-xl" />
-          ))}
+      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-6">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[10px] font-bold text-blue-400/50 uppercase tracking-widest">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3 h-3 animate-pulse" />
+              <TranslatedText text="AI is crafting a question..." />
+            </div>
+          </div>
+          <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-600/40 animate-progress-fast" />
+          </div>
+        </div>
+        
+        <div className="space-y-4 animate-pulse">
+          <div className="h-5 bg-white/10 rounded-lg w-5/6" />
+          <div className="grid grid-cols-1 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-12 bg-white/5 border border-white/5 rounded-xl" />
+            ))}
+          </div>
         </div>
       </div>
     );

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useLearnPageLogic } from '@/hooks/useLearnPageLogic';
 import TranslatedText from '@/components/ui/TranslatedText';
 import BottomNav from '@/components/ui/BottomNav';
@@ -18,7 +19,7 @@ import LearnPageLoading from '@/components/Journey/LearnPageLoading';
  */
 export default function LearnPage() {
   const {
-    router, countryCode, userContext, country, steps, guideLoading,
+    router, countryCode, userContext, country, steps,
     completedSteps, currentStepIndex, setCurrentStepIndex, activeStep,
     adaptationActive, reExplanation, isReExplaining,
     suggestion, dismiss, recordInteraction,
@@ -27,7 +28,7 @@ export default function LearnPage() {
     handleStepClick, moveToNextStep, completeStep
   } = useLearnPageLogic();
 
-  if (guideLoading || !userContext) {
+  if (!userContext) {
     return <LearnPageLoading />;
   }
 
@@ -77,76 +78,78 @@ export default function LearnPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 p-4 sm:p-6 lg:p-12 lg:px-20 min-w-0">
-          <div className="max-w-3xl mx-auto space-y-16">
-            {activeStep ? (
-              <>
-                <ActiveStepContent
-                  steps={steps}
-                  activeStep={activeStep}
-                  currentStepIndex={currentStepIndex}
-                  completedSteps={completedSteps}
-                  userContext={userContext}
-                  adaptationActive={adaptationActive}
-                  isSpeaking={isSpeaking}
-                  currentText={currentText}
-                  electionBodyUrl={country?.electionBodyUrl}
-                  quizLoading={quizLoading}
-                  question={question}
-                  selectedAnswer={selectedAnswer}
-                  isCorrect={isCorrect}
-                  showResult={showResult}
-                  explanation={explanation}
-                  reExplanation={reExplanation}
-                  isReExplaining={isReExplaining}
-                  onComplete={() => {
-                    completeStep(activeStep.id);
-                    recordInteraction();
-                  }}
-                  onToggleTTS={toggleTTS}
-                  onInteraction={recordInteraction}
-                  onSubmitQuiz={submitAnswer}
-                  onContinueQuiz={() => {
-                    if (currentStepIndex < steps.length - 1) {
+          <Suspense fallback={<LearnPageLoading />}>
+            <div className="max-w-3xl mx-auto space-y-16">
+              {activeStep ? (
+                <>
+                  <ActiveStepContent
+                    steps={steps}
+                    activeStep={activeStep}
+                    currentStepIndex={currentStepIndex}
+                    completedSteps={completedSteps}
+                    userContext={userContext}
+                    adaptationActive={adaptationActive}
+                    isSpeaking={isSpeaking}
+                    currentText={currentText}
+                    electionBodyUrl={country?.electionBodyUrl}
+                    quizLoading={quizLoading}
+                    question={question}
+                    selectedAnswer={selectedAnswer}
+                    isCorrect={isCorrect}
+                    showResult={showResult}
+                    explanation={explanation}
+                    reExplanation={reExplanation}
+                    isReExplaining={isReExplaining}
+                    onComplete={() => {
+                      completeStep(activeStep.id);
+                      recordInteraction();
+                    }}
+                    onToggleTTS={toggleTTS}
+                    onInteraction={recordInteraction}
+                    onSubmitQuiz={submitAnswer}
+                    onContinueQuiz={() => {
+                      if (currentStepIndex < steps.length - 1) {
+                        moveToNextStep();
+                        resetQuiz();
+                        recordInteraction();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        router.push('/quiz');
+                      }
+                    }}
+                  />
+
+                  {/* Step Navigation Controls */}
+                  <StepNavigation
+                    currentStepIndex={currentStepIndex}
+                    totalSteps={steps.length}
+                    canContinue={completedSteps.includes(activeStep.id)}
+                    onPrevious={() => handleStepClick(currentStepIndex - 1)}
+                    onContinue={() => {
                       moveToNextStep();
                       resetQuiz();
                       recordInteraction();
                       window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
-                      router.push('/quiz');
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </>
+              ) : (
+                <div className="text-center py-20 bg-white/5 rounded-[3rem] border border-dashed border-white/10 animate-pulse">
+                  <p className="text-gray-500 text-sm font-medium">
+                    <TranslatedText text="Select a module from the timeline to resume your journey." />
+                  </p>
+                </div>
+              )}
 
-                {/* Step Navigation Controls */}
-                <StepNavigation
-                  currentStepIndex={currentStepIndex}
-                  totalSteps={steps.length}
-                  canContinue={completedSteps.includes(activeStep.id)}
-                  onPrevious={() => handleStepClick(currentStepIndex - 1)}
-                  onContinue={() => {
-                    moveToNextStep();
-                    resetQuiz();
-                    recordInteraction();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+              {showCurriculumComplete && (
+                <CompletionScreen
+                  countryName={userContext.countryName}
+                  onReview={() => setCurrentStepIndex(steps.length - 1)}
+                  onTakeQuiz={() => router.push('/quiz')}
                 />
-              </>
-            ) : (
-              <div className="text-center py-20 bg-white/5 rounded-[3rem] border border-dashed border-white/10 animate-pulse">
-                <p className="text-gray-500 text-sm font-medium">
-                  <TranslatedText text="Select a module from the timeline to resume your journey." />
-                </p>
-              </div>
-            )}
-
-            {showCurriculumComplete && (
-              <CompletionScreen
-                countryName={userContext.countryName}
-                onReview={() => setCurrentStepIndex(steps.length - 1)}
-                onTakeQuiz={() => router.push('/quiz')}
-              />
-            )}
-          </div>
+              )}
+            </div>
+          </Suspense>
         </main>
       </div>
 

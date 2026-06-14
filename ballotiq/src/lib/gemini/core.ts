@@ -152,6 +152,61 @@ export async function callGemini(
   return null;
 }
 
+export async function callGeminiStream(
+  prompt: string,
+  sessionId: string,
+  lite: boolean = false,
+  systemInstruction?: string,
+  maxTokens: number = 512,
+): Promise<ReadableStream<string> | null> {
+  if (!isGeminiEnabled) return null;
+
+  const modelId = MODELS_TO_TRY[0]; // Prefer the fastest model for streaming
+
+  await acquireSlot();
+  try {
+    const model = genAI.getGenerativeModel({
+      model: modelId,
+      generationConfig: {
+        temperature: lite ? 0.1 : 0.3,
+        maxOutputTokens: maxTokens,
+      },
+      systemInstruction,
+    });
+
+    const result = await model.generateContentStream({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+
+    return new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+              controller.enqueue(chunkText);
+            }
+          }
+          await incrementUsage(sessionId, "gemini");
+          controller.close();
+        } catch (error) {
+          logger.error("[GeminiStream] Stream error", error);
+          controller.error(error);
+        } finally {
+          releaseSlot();
+        }
+      },
+      cancel() {
+        releaseSlot();
+      }
+    });
+  } catch (err) {
+    logger.error(`[GeminiStream] Failed to start stream: ${modelId}`, err);
+    releaseSlot();
+    return null;
+  }
+}
+
 /** Specialized caller for Quiz to handle 10+ questions */
 export async function callGeminiQuiz(
   prompt: string,

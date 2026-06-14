@@ -7,8 +7,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ElectionStep, LearningSource, UserContext } from '@/types';
-import { apiGeneratePersonalizedGuide } from '@/lib/gemini/api';
+import { apiGeneratePersonalizedGuideStream } from '@/lib/gemini/api';
 import { getFallbackGuide } from '@/lib/gemini/fallback';
+import { isElectionStepsArray } from '@/lib/gemini/validator';
 
 interface UseElectionGuideReturn {
   steps: ElectionStep[];
@@ -20,9 +21,6 @@ interface UseElectionGuideReturn {
 
 /**
  * Fetches and manages the personalized election guide.
- * @param countryCode - ISO country code
- * @param userContext - User's session context with knowledge level and confusion
- * @returns Steps, loading state, error, and content source
  */
 export function useElectionGuide(
   countryCode: string,
@@ -61,6 +59,7 @@ export function useElectionGuide(
     fetchedRef.current = true;
 
     let didTimeout = false;
+    let accumulated = '';
 
     async function loadGuide() {
       setLoading(true);
@@ -76,28 +75,48 @@ export function useElectionGuide(
       }, 800);
 
       try {
-        const result = await apiGeneratePersonalizedGuide(
+        await apiGeneratePersonalizedGuideStream(
           countryCode,
           userContext!.countryName,
           userContext!.knowledgeLevel,
           [userContext!.mainConfusion || 'general election process'],
           userContext!.mainConfusion || '',
+          (chunk) => {
+            accumulated += chunk;
+            
+            // Try to parse the accumulated JSON array
+            // We use a simple strategy: try to find the last complete object in the array
+            try {
+              let textToParse = accumulated.trim();
+              if (!textToParse.endsWith(']')) {
+                // Try to close the array if it's not closed
+                textToParse = textToParse.replace(/,?\s*$/, '') + ']';
+                if (!textToParse.startsWith('[')) {
+                   // If it doesn't start with [, it might be starting with markdown fence or just raw content
+                   const startIdx = textToParse.indexOf('[');
+                   if (startIdx !== -1) textToParse = textToParse.substring(startIdx);
+                }
+              }
+
+              const parsed = JSON.parse(textToParse);
+              if (isElectionStepsArray(parsed)) {
+                setSteps(parsed.map((s, i) => ({
+                  ...s,
+                  status: i === 0 ? 'current' as const : 'locked' as const,
+                })));
+                setSource('gemini');
+                // If we have at least one step, we can stop the loading pulse
+                if (parsed.length > 0) setLoading(false);
+              }
+            } catch {
+              // Ignore partial parse errors
+            }
+          },
           userContext!.sessionId,
           userContext!.recommendedStepCount,
         );
 
         clearTimeout(timeoutId);
-
-        // Update with personalized content (even if timeout already fired and fallback is showing)
-        if (result.source === 'gemini' || result.source === 'cache') {
-          const stepsWithStatus = result.steps.map((s, i) => ({
-            ...s,
-            status: i === 0 ? 'current' as const : 'locked' as const,
-          }));
-
-          setSteps(stepsWithStatus);
-          setSource(result.source);
-        }
       } catch (err) {
         if (didTimeout) return;
         clearTimeout(timeoutId);

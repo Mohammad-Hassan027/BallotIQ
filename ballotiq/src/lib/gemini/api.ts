@@ -75,6 +75,45 @@ export async function apiGeneratePersonalizedGuide(
   });
 }
 
+/**
+ * Generates a personalized election guide as a stream.
+ */
+export async function apiGeneratePersonalizedGuideStream(
+  countryCode: string,
+  countryName: string,
+  knowledgeLevel: KnowledgeLevel,
+  focusAreas: string[],
+  userConfusion: string,
+  onChunk: (text: string) => void,
+  sessionId?: string,
+  stepCount?: number,
+): Promise<void> {
+  const res = await fetch('/api/gemini/guide', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      countryCode, countryName, knowledgeLevel,
+      focusAreas, userConfusion, sessionId, stepCount,
+      stream: true,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Streaming request failed: ${res.status}`);
+  }
+
+  const reader = res.body?.getReader();
+  const decoder = new TextDecoder();
+
+  if (!reader) throw new Error('No reader available');
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    onChunk(decoder.decode(value, { stream: true }));
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Micro-Quiz
 // ---------------------------------------------------------------------------

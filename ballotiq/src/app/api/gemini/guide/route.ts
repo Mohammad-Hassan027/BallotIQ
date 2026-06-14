@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generatePersonalizedGuide } from '@/lib/gemini/guide';
+import { generatePersonalizedGuide, generatePersonalizedGuideStream } from '@/lib/gemini/guide';
 import type { KnowledgeLevel } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -18,11 +18,13 @@ export async function POST(req: NextRequest) {
       userConfusion: string;
       sessionId?: string;
       stepCount?: number;
+      stream?: boolean;
     };
 
     const {
       countryCode, countryName, knowledgeLevel,
       focusAreas, userConfusion, sessionId, stepCount,
+      stream = false,
     } = body;
 
     if (!countryCode || !countryName || !knowledgeLevel || !focusAreas || userConfusion === undefined) {
@@ -37,6 +39,28 @@ export async function POST(req: NextRequest) {
         { error: 'AI service is not configured' },
         { status: 503 }
       );
+    }
+
+    if (stream) {
+      const streamResult = await generatePersonalizedGuideStream(
+        countryCode, countryName, knowledgeLevel,
+        focusAreas, userConfusion, sessionId, stepCount,
+      );
+
+      if (!streamResult) {
+        return NextResponse.json(
+          { error: 'Failed to start stream' },
+          { status: 500 }
+        );
+      }
+
+      return new Response(streamResult, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
     }
 
     const result = await generatePersonalizedGuide(
