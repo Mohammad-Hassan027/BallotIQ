@@ -51,24 +51,24 @@
 
   :root[data-theme="light"],
   .light {
-    /* Sophisticated Light Palette */
-    --background: #f8fafc;
-    --foreground: #0f172a;
+    /* Sophisticated Light Navy Palette */
+    --background: #eef3f8; /* Soft light navy */
+    --foreground: #0f1e36; /* Deep navy text for contrast */
 
     --card: #ffffff;
-    --card-foreground: #0f172a;
+    --card-foreground: #0f1e36;
 
     --popover: #ffffff;
-    --popover-foreground: #0f172a;
+    --popover-foreground: #0f1e36;
 
-    --primary: #4f46e5; /* Deep Indigo for light contrast */
+    --primary: #2563eb; /* Royal Blue */
     --primary-foreground: #ffffff;
 
-    --secondary: #f1f5f9;
-    --secondary-foreground: #0f172a;
+    --secondary: #dbe5f0; /* Muted light navy */
+    --secondary-foreground: #0f1e36;
 
-    --muted: #e2e8f0;
-    --muted-foreground: #475569;
+    --muted: #dae2ec;
+    --muted-foreground: #334e68; /* Slate-blue */
 
     --accent: #0284c7;
     --accent-foreground: #ffffff;
@@ -76,16 +76,16 @@
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
 
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #4f46e5;
+    --border: #cbd5e1;
+    --input: #cbd5e1;
+    --ring: #2563eb;
 
     /* Custom Gradients for Light Mode */
-    --grad-primary: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+    --grad-primary: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
     --grad-surface: linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.03) 0%,
-      rgba(0, 0, 0, 0) 100%
+      rgba(15, 30, 54, 0.04) 0%,
+      rgba(15, 30, 54, 0) 100%
     );
   }
 }
@@ -243,8 +243,8 @@ html.light body {
 /* Page wrapper backgrounds */
 html[data-theme="light"] .bg-gradient-to-br.from-gray-950.via-blue-950.to-gray-950,
 html.light .bg-gradient-to-br.from-gray-950.via-blue-950.to-gray-950 {
-  background-image: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f1f5f9 100%);
-  color: #1e293b;
+  background-image: linear-gradient(135deg, #eef3f8 0%, #dbe5f0 50%, #c9d7e7 100%);
+  color: #0f1e36;
 }
 
 /* Card containers, input backgrounds, sidebars, and headers overrides */
@@ -274,15 +274,15 @@ html[data-theme="light"] .bg-gray-950\/40,
 html.light .bg-gray-950\/40,
 html[data-theme="light"] aside,
 html.light aside {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  color: #1e293b !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  color: #0f1e36 !important;
+  border-color: rgba(15, 30, 54, 0.1) !important;
 }
 
 /* Chat message gradient backdrop override */
 html[data-theme="light"] .chat-messages-container,
 html.light .chat-messages-container {
-  background-image: linear-gradient(to bottom, transparent, rgba(248, 250, 252, 0.5)) !important;
+  background-image: linear-gradient(to bottom, transparent, rgba(238, 243, 248, 0.5)) !important;
 }
 
 /* Hover state overrides for light mode cards */
@@ -294,29 +294,29 @@ html[data-theme="light"] .path-card-body:hover,
 html.light .path-card-body:hover,
 html[data-theme="light"] button:hover > div.backdrop-blur-2xl,
 html.light button:hover > div.backdrop-blur-2xl {
-  background-color: rgba(245, 247, 250, 0.95) !important;
+  background-color: rgba(238, 243, 248, 0.95) !important;
 }
 
 /* Text color adjustments */
 html[data-theme="light"] .text-gray-200,
 html.light .text-gray-200 {
-  color: #334155;
+  color: #334e68;
 }
 html[data-theme="light"] .text-gray-300,
 html.light .text-gray-300 {
-  color: #475569;
+  color: #486581;
 }
 html[data-theme="light"] .text-gray-400,
 html.light .text-gray-400 {
-  color: #64748b;
+  color: #627d98;
 }
 html[data-theme="light"] .text-gray-100,
 html.light .text-gray-100 {
-  color: #1e293b;
+  color: #0f1e36;
 }
 html[data-theme="light"] .text-gray-500,
 html.light .text-gray-500 {
-  color: #94a3b8;
+  color: #829ab1;
 }
 
 /* Header text adjustments */
@@ -332,7 +332,7 @@ html[data-theme="light"] h5.text-white,
 html.light h5.text-white,
 html[data-theme="light"] h6.text-white,
 html.light h6.text-white {
-  color: #0f172a;
+  color: #0f1e36;
 }
 
 /* Target all white texts inside elements that transition to a light background */
@@ -341,30 +341,30 @@ html[data-theme="light"] :is(
   [class*="bg-[#080815]"], [class*="bg-[#070718]"], [class*="bg-[#050510]"],
   .path-card-body, .language-dropdown, .diagnostic-textarea, .chat-input-wrapper, .chat-textarea,
   .bg-gray-950, .bg-gray-950\/80,
-  .glass, .glass-light, .bento-card, .shadow-inner, nav, header, button
+  .glass, .glass-light, .bento-card, .shadow-inner, nav, header
 ) :is(.text-white, h1, h2, h3, h4, h5, h6),
 html[data-theme="light"] :is(
   .bg-white\/5, .bg-white\/10, .bg-white\/\[0\.03\], .bg-white\/\[0\.04\], .bg-white\/\[0\.05\], .bg-white\/\[0\.01\], .bg-white\/\[0\.02\],
   [class*="bg-[#080815]"], [class*="bg-[#070718]"], [class*="bg-[#050510]"],
   .path-card-body, .language-dropdown, .diagnostic-textarea, .chat-input-wrapper, .chat-textarea,
   .bg-gray-950, .bg-gray-950\/80,
-  .glass, .glass-light, .bento-card, .shadow-inner, nav, header, button
+  .glass, .glass-light, .bento-card, .shadow-inner, nav, header
 ).text-white,
 html.light :is(
   .bg-white\/5, .bg-white\/10, .bg-white\/\[0\.03\], .bg-white\/\[0\.04\], .bg-white\/\[0\.05\], .bg-white\/\[0\.01\], .bg-white\/\[0\.02\],
   [class*="bg-[#080815]"], [class*="bg-[#070718]"], [class*="bg-[#050510]"],
   .path-card-body, .language-dropdown, .diagnostic-textarea, .chat-input-wrapper, .chat-textarea,
   .bg-gray-950, .bg-gray-950\/80,
-  .glass, .glass-light, .bento-card, .shadow-inner, nav, header, button
+  .glass, .glass-light, .bento-card, .shadow-inner, nav, header
 ) :is(.text-white, h1, h2, h3, h4, h5, h6),
 html.light :is(
   .bg-white\/5, .bg-white\/10, .bg-white\/\[0\.03\], .bg-white\/\[0\.04\], .bg-white\/\[0\.05\], .bg-white\/\[0\.01\], .bg-white\/\[0\.02\],
   [class*="bg-[#080815]"], [class*="bg-[#070718]"], [class*="bg-[#050510]"],
   .path-card-body, .language-dropdown, .diagnostic-textarea, .chat-input-wrapper, .chat-textarea,
   .bg-gray-950, .bg-gray-950\/80,
-  .glass, .glass-light, .bento-card, .shadow-inner, nav, header, button
+  .glass, .glass-light, .bento-card, .shadow-inner, nav, header
 ).text-white {
-  color: #0f172a !important;
+  color: #0f1e36 !important;
 }
 
 /* Icons inside light container background wrappers */
@@ -378,13 +378,13 @@ html[data-theme="light"] textarea::placeholder,
 html.light textarea::placeholder,
 html[data-theme="light"] input::placeholder,
 html.light input::placeholder {
-  color: #64748b !important; /* slate-500 */
+  color: #627d98 !important; /* slate-blue placeholder */
 }
 
 /* Light blue text color overrides for readability on white/light backgrounds */
 html[data-theme="light"] .text-blue-300,
 html.light .text-blue-300 {
-  color: #2563eb !important; /* blue-600 */
+  color: #1d4ed8 !important; /* blue-700 */
 }
 html[data-theme="light"] .text-blue-200,
 html.light .text-blue-200,
@@ -396,7 +396,7 @@ html.light .text-blue-100 {
 /* Handle hover text updates for elements that hover to white in dark mode */
 html[data-theme="light"] .hover\:text-white:hover,
 html.light .hover\:text-white:hover {
-  color: #0f172a !important;
+  color: #0f1e36 !important;
 }
 
 /* Glass and Bento card overrides */
@@ -404,56 +404,56 @@ html[data-theme="light"] .glass,
 html.light .glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(15, 30, 54, 0.08);
 }
 html[data-theme="light"] .glass-light,
 html.light .glass-light {
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(15, 30, 54, 0.05);
 }
 html[data-theme="light"] .bento-card,
 html.light .bento-card {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(15, 30, 54, 0.08);
 }
 html[data-theme="light"] .bento-card:hover,
 html.light .bento-card:hover {
-  border-color: rgba(0, 0, 0, 0.15);
+  border-color: rgba(15, 30, 54, 0.15);
   background: rgba(255, 255, 255, 0.85);
 }
 
 /* Navigation bars and borders */
 html[data-theme="light"] .bg-white\/\[0\.03\],
 html.light .bg-white\/\[0\.03\] {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(15, 30, 54, 0.03);
 }
 html[data-theme="light"] .border-white\/10,
 html.light .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.08);
+  border-color: rgba(15, 30, 54, 0.08);
 }
 html[data-theme="light"] .border-white\/5,
 html.light .border-white\/5 {
-  border-color: rgba(0, 0, 0, 0.04);
+  border-color: rgba(15, 30, 54, 0.04);
 }
 html[data-theme="light"] .hover\:border-white\/20:hover,
 html.light .hover\:border-white\/20:hover {
-  border-color: rgba(0, 0, 0, 0.12);
+  border-color: rgba(15, 30, 54, 0.12);
 }
 html[data-theme="light"] .hover\:bg-white\/10:hover,
 html.light .hover\:bg-white\/10:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(15, 30, 54, 0.05);
 }
 html[data-theme="light"] .hover\:bg-white\/5:hover,
 html.light .hover\:bg-white\/5:hover {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(15, 30, 54, 0.03);
 }
 
 /* Gradient text adaptation */
 html[data-theme="light"] .text-gradient,
 html.light .text-gradient {
-  background: linear-gradient(to right, #0f172a, #334155);
+  background: linear-gradient(to right, #0f1e36, #334e68);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
