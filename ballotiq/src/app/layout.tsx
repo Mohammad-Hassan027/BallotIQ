@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Sora, Inter } from 'next/font/google';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { TranslationProvider } from '@/context/TranslationContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import StartupDiagnostics from '@/components/ui/StartupDiagnostics';
 import './globals.css';
 import BackToTop from '@/components/BackToTop';
@@ -66,6 +67,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${sora.variable} ${inter.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script
+          id="theme-init"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ballotiq_theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=t||(d?'dark':'light');if(theme==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();`
+          }}
+        />
+      </head>
       <body className={`font-sans min-h-screen bg-background text-foreground antialiased bg-grain`}>
         <a 
           href="#main-content"
@@ -76,22 +85,24 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <TranslationProvider>
-          <StartupDiagnostics />
-          <main id="main-content">
-            <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><LoadingSkeleton lines={10} /></div>}>
-              {children}
-            </Suspense>
-          </main>
-          <div
-            id="a11y-announcer"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            className="sr-only"
-          />
-          <BackToTop />
-        </TranslationProvider>
+        <ThemeProvider>
+          <TranslationProvider>
+            <StartupDiagnostics />
+            <main id="main-content">
+              <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><LoadingSkeleton lines={10} /></div>}>
+                {children}
+              </Suspense>
+            </main>
+            <div
+              id="a11y-announcer"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="sr-only"
+            />
+            <BackToTop />
+          </TranslationProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
