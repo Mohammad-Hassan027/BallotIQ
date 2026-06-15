@@ -16,44 +16,68 @@ service cloud.firestore {
       }
     }
     
-    // Rate limits - allow update but prevent tampering with counts from other sessions
+    // Rate limits - server-enforced: only atomic +1 increments are permitted.
+    // A client can never arbitrarily reset or skip counts.
     match /rate_limits/{sessionId} {
       allow read: if request.auth != null && request.auth.uid == sessionId;
-      
-      allow create: if request.auth != null 
+
+      // Allow initial document creation only with all counts at 0.
+      // atomicIncrementUsage may also create with count=1 for the called service,
+      // so we permit counts <= 1 here, but no field may exceed 1.
+      allow create: if request.auth != null
         && request.auth.uid == sessionId
         && request.resource.data.sessionId == sessionId
         && request.resource.data.lastResetAt == request.time
         && request.resource.data.geminiCallsToday <= 1
         && request.resource.data.translateCallsToday <= 1
-        && request.resource.data.ttsCallsToday <= 1;
+        && request.resource.data.ttsCallsToday <= 1
+        && request.resource.data.geminiCallsToday >= 0
+        && request.resource.data.translateCallsToday >= 0
+        && request.resource.data.ttsCallsToday >= 0;
 
       allow update: if request.auth != null
         && request.auth.uid == sessionId
         && request.resource.data.sessionId == sessionId
         && (
-          // Case 1: Same-day increment
+          // Case 1: Same-day — exactly one counter increments by 1, others unchanged.
+          // Prevents arbitrary jumps (e.g. 0 → 39) while allowing the normal +1 path.
           (request.resource.data.lastResetAt == resource.data.lastResetAt
-           && request.time.year() == resource.data.lastResetAt.year()
+           && request.time.year()  == resource.data.lastResetAt.year()
            && request.time.month() == resource.data.lastResetAt.month()
-           && request.time.day() == resource.data.lastResetAt.day()
-           && request.resource.data.geminiCallsToday <= 40
-           && request.resource.data.translateCallsToday <= 100
-           && request.resource.data.ttsCallsToday <= 50
-           && request.resource.data.geminiCallsToday >= resource.data.geminiCallsToday
-           && request.resource.data.translateCallsToday >= resource.data.translateCallsToday
-           && request.resource.data.ttsCallsToday >= resource.data.ttsCallsToday
+           && request.time.day()   == resource.data.lastResetAt.day()
+           && (
+             // Only gemini increments
+             (request.resource.data.geminiCallsToday    == resource.data.geminiCallsToday + 1
+              && request.resource.data.geminiCallsToday    <= 40
+              && request.resource.data.translateCallsToday == resource.data.translateCallsToday
+              && request.resource.data.ttsCallsToday       == resource.data.ttsCallsToday)
+             ||
+             // Only translate increments
+             (request.resource.data.translateCallsToday == resource.data.translateCallsToday + 1
+              && request.resource.data.translateCallsToday <= 100
+              && request.resource.data.geminiCallsToday    == resource.data.geminiCallsToday
+              && request.resource.data.ttsCallsToday       == resource.data.ttsCallsToday)
+             ||
+             // Only tts increments
+             (request.resource.data.ttsCallsToday       == resource.data.ttsCallsToday + 1
+              && request.resource.data.ttsCallsToday       <= 50
+              && request.resource.data.geminiCallsToday    == resource.data.geminiCallsToday
+              && request.resource.data.translateCallsToday == resource.data.translateCallsToday)
+           )
           )
           ||
-          // Case 2: New-day reset
+          // Case 2: New-day reset — all counters must start at 0 or 1 (for the
+          // service being called), and lastResetAt must match the server write time.
           (request.resource.data.lastResetAt == request.time
-           && (request.time.year() != resource.data.lastResetAt.year()
+           && (request.time.year()  != resource.data.lastResetAt.year()
                || request.time.month() != resource.data.lastResetAt.month()
-               || request.time.day() != resource.data.lastResetAt.day())
-           && request.resource.data.geminiCallsToday <= 1
+               || request.time.day()   != resource.data.lastResetAt.day())
+           && request.resource.data.geminiCallsToday    <= 1
            && request.resource.data.translateCallsToday <= 1
-           && request.resource.data.ttsCallsToday <= 1
-          )
+           && request.resource.data.ttsCallsToday       <= 1
+           && request.resource.data.geminiCallsToday    >= 0
+           && request.resource.data.translateCallsToday >= 0
+           && request.resource.data.ttsCallsToday       >= 0)
         );
     }
 

@@ -128,5 +128,31 @@ describe("incrementUsage", () => {
     // The Promise should resolve normally, suppressing the error
     await expect(incrementUsage(sessionId, "gemini")).resolves.not.toThrow();
   });
+
+  it("never bundles multiple service keys into a single write (bypass prevention)", async () => {
+    // Security: if a client batched multiple counters in one write it could skip
+    // counts and evade the Firestore rule that enforces +1-only per field.
+    // Each service call must result in exactly one atomicIncrementUsage call
+    // with exactly one service key — never multiple keys at once.
+    await incrementUsage(sessionId, "gemini");
+    await incrementUsage(sessionId, "translate");
+    await incrementUsage(sessionId, "tts");
+
+    expect(atomicIncrementUsage).toHaveBeenCalledTimes(3);
+    expect(atomicIncrementUsage).toHaveBeenNthCalledWith(1, sessionId, "geminiCallsToday");
+    expect(atomicIncrementUsage).toHaveBeenNthCalledWith(2, sessionId, "translateCallsToday");
+    expect(atomicIncrementUsage).toHaveBeenNthCalledWith(3, sessionId, "ttsCallsToday");
+  });
+
+  it("passes exactly one service key per call — never an array or object (bypass prevention)", async () => {
+    // Security: the second argument must always be a single string key, not a
+    // bundled object. This mirrors the Firestore rule: only one field may change
+    // per write. If this signature changes, the rules will reject the write.
+    await incrementUsage(sessionId, "gemini");
+
+    const [, secondArg] = (atomicIncrementUsage as jest.Mock).mock.calls[0];
+    expect(typeof secondArg).toBe("string");
+    expect(secondArg).toBe("geminiCallsToday");
+  });
 });
 
