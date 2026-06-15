@@ -112,6 +112,44 @@ describe('DiagnosticQuestion', () => {
     expect(onAnswer).toHaveBeenCalledWith('General election process');
   });
 
+  it('Ctrl+Enter submits the answer in question 3', () => {
+    render(<DiagnosticQuestion questionNumber={3} onAnswer={onAnswer} isLoading={false} />);
+    const textarea = screen.getByPlaceholderText(/e.g. How does vote counting work/i);
+    fireEvent.change(textarea, { target: { value: 'How do I register to vote?' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: true });
+    expect(onAnswer).toHaveBeenCalledWith('How do I register to vote?');
+  });
+
+  it('Cmd+Enter (metaKey) submits the answer in question 3', () => {
+    render(<DiagnosticQuestion questionNumber={3} onAnswer={onAnswer} isLoading={false} />);
+    const textarea = screen.getByPlaceholderText(/e.g. How does vote counting work/i);
+    fireEvent.change(textarea, { target: { value: 'What is a ballot?' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', metaKey: true });
+    expect(onAnswer).toHaveBeenCalledWith('What is a ballot?');
+  });
+
+  it('Ctrl+Enter does NOT submit when isLoading is true', () => {
+    render(<DiagnosticQuestion questionNumber={3} onAnswer={onAnswer} isLoading={true} />);
+    const textarea = screen.getByPlaceholderText(/e.g. How does vote counting work/i);
+    fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: true });
+    expect(onAnswer).not.toHaveBeenCalled();
+  });
+
+  it('plain Enter does NOT submit the answer in question 3', () => {
+    render(<DiagnosticQuestion questionNumber={3} onAnswer={onAnswer} isLoading={false} />);
+    const textarea = screen.getByPlaceholderText(/e.g. How does vote counting work/i);
+    fireEvent.change(textarea, { target: { value: 'How does voting work?' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: false, metaKey: false });
+    expect(onAnswer).not.toHaveBeenCalled();
+  });
+
+  it('keyboard hint "Ctrl + Enter to submit" is visible on question 3', () => {
+    render(<DiagnosticQuestion questionNumber={3} onAnswer={onAnswer} isLoading={false} />);
+    expect(screen.getByText('Ctrl')).toBeInTheDocument();
+    expect(screen.getByText('Enter')).toBeInTheDocument();
+    expect(screen.getByText('to submit')).toBeInTheDocument();
+  });
+
   it('limits textarea input to maxChars', () => {
     render(<DiagnosticQuestion questionNumber={3} onAnswer={onAnswer} isLoading={false} />);
     const textarea = screen.getByPlaceholderText(/e.g. How does vote counting work/i) as HTMLTextAreaElement;

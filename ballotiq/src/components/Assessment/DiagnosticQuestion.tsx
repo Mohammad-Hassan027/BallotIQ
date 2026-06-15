@@ -153,10 +153,15 @@ export default function DiagnosticQuestion({
           <textarea
             value={textInput}
             onChange={(e) => setTextInput(e.target.value.slice(0, maxChars))}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !isLoading) {
+                onAnswer(sanitizeUserInput(textInput || 'General election process'));
+              }
+            }}
             placeholder="e.g. How does vote counting work? What is a constituency?"
             className="w-full h-32 sm:h-40 px-4 sm:px-6 py-4 sm:py-6 pr-14 sm:pr-16 bg-[#080815] rounded-[1.4rem] sm:rounded-[1.9rem] text-white placeholder-gray-600 resize-none focus:outline-none transition-all text-base sm:text-lg leading-relaxed"
             aria-labelledby="q3-heading"
-            aria-describedby="char-counter"
+            aria-describedby="char-counter q3-keyboard-hint"
             maxLength={maxChars}
             disabled={isLoading}
           />
@@ -177,6 +182,13 @@ export default function DiagnosticQuestion({
               <TranslatedText text="Listening... speak now." />
             </p>
           )}
+          <p id="q3-keyboard-hint" className="text-[10px] sm:text-xs text-gray-600 mt-1">
+            <kbd className="px-1 py-0.5 text-[9px] sm:text-[10px] font-mono bg-white/5 border border-white/10 rounded">Ctrl</kbd>
+            {' + '}
+            <kbd className="px-1 py-0.5 text-[9px] sm:text-[10px] font-mono bg-white/5 border border-white/10 rounded">Enter</kbd>
+            {' '}
+            <TranslatedText text="to submit" />
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
           <span id="char-counter" className={`text-[10px] sm:text-xs font-medium tracking-widest uppercase ${charCount > 180 ? 'text-amber-400' : 'text-gray-600'}`}>
