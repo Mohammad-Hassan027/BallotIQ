@@ -91,11 +91,6 @@ export async function generatePersonalizedGuide(
   );
 }
 
-function sanitizeUserInput(input: string): string {
-  if (!input) return '';
-  return input.replace(/[<>]/g, '').slice(0, 500);
-}
-
 /**
  * Generates election steps as a stream.
  */

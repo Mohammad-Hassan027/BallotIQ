@@ -117,6 +117,9 @@ export async function askAssistant(
   );
 }
 
+// Track consecutive re-explanation failures locally per session to vary fallbacks
+const fallbackRegistry = new Map<string, number>();
+
 /**
  * Re-explains a concept when user gets micro-quiz wrong.
  */
@@ -127,9 +130,44 @@ export async function reExplainConcept(
   knowledgeLevel: KnowledgeLevel,
   sessionId?: string,
 ): Promise<string> {
-  const fallback = `The correct answer is "${correctAnswer}". ${step.simpleExplanation}`;
-  const prompt = buildReExplanationPrompt(step, userAnswer, correctAnswer, knowledgeLevel);
-  const raw = await callGemini(prompt, sessionId ?? 'explain', true);
-  if (!raw) return fallback;
-  return sanitizeAIResponse(raw);
+  const sessionKey = `${sessionId ?? 'global'}-${step.id}`;
+  const failureCount = fallbackRegistry.get(sessionKey) || 0;
+
+  const getFallback = () => {
+    // If we have custom fallbacks for this step, use them first
+    if (step.fallbackExplanations && step.fallbackExplanations.length > 0) {
+      const index = failureCount % step.fallbackExplanations.length;
+      return step.fallbackExplanations[index];
+    }
+
+    // Default varied fallback templates
+    const templates = [
+      `The correct answer is "${correctAnswer}". ${step.simpleExplanation}`,
+      `Actually, the right choice is "${correctAnswer}". Remember: ${step.description}`,
+      `Don't worry! For "${step.title}", the correct answer is "${correctAnswer}". ${step.simpleExplanation}`,
+      `Let's try again. The answer is "${correctAnswer}". ${step.description}`
+    ];
+    
+    return templates[failureCount % templates.length];
+  };
+
+  try {
+    const prompt = buildReExplanationPrompt(step, userAnswer, correctAnswer, knowledgeLevel);
+    const raw = await callGemini(prompt, sessionId ?? 'explain', true);
+    
+    if (raw) {
+      // Success - clear failure count for this specific concept
+      fallbackRegistry.delete(sessionKey);
+      return sanitizeAIResponse(raw);
+    }
+    
+    throw new Error('Empty Gemini response');
+  } catch (err) {
+    logger.warn('Re-explanation AI call failed, using fallback', { sessionKey, failureCount });
+    
+    // Increment failure count for next time
+    fallbackRegistry.set(sessionKey, failureCount + 1);
+    
+    return getFallback();
+  }
 }

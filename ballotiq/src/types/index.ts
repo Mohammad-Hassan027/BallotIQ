@@ -64,6 +64,7 @@ export interface ElectionStep {
   description: string;
   detailedExplanation: string;
   simpleExplanation: string;
+  fallbackExplanations?: string[];
   timeline: string;
   requirements: string[];
   tips: string[];
