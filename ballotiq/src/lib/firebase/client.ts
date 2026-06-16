@@ -6,7 +6,15 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import type { FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
 import type { Auth, User } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
@@ -173,7 +181,57 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   if (!auth) return () => undefined;
   return onAuthStateChanged(auth, callback);
 }
+/**
+ * Sign in using Google popup authentication.
+ */
 
+
+export async function signInWithGoogle() {
+  const auth = getFirebaseAuth();
+
+  if (!auth) {
+    throw new Error('Firebase Auth not initialized');
+  }
+
+  const provider = new GoogleAuthProvider();
+
+  const result = await signInWithPopup(auth, provider);
+
+  return result.user;
+}
+/**
+ * Creates a new account using email and password.
+ */
+export async function createAccount(
+  email: string,
+  password: string,
+) {
+  const auth = getFirebaseAuth();
+
+  if (!auth) {
+    throw new Error('Firebase Auth not initialized');
+  }
+
+  const result = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
+
+  return result.user;
+}
+/**
+ * Signs out the current user.
+ */
+export async function logout() {
+  const auth = getFirebaseAuth();
+
+  if (!auth) {
+    throw new Error('Firebase Auth not initialized');
+  }
+
+  await signOut(auth);
+}
 /**
  * Exported Firebase App instance for legacy or direct access.
  */
