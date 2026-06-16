@@ -5,6 +5,7 @@ import { Bot, User, ExternalLink, Copy, Check } from 'lucide-react';
 import type { ChatMessage as ChatMessageType, UserContext } from '@/types';
 import TTSButton from '@/components/ui/TTSButton';
 import TranslatedText from '@/components/ui/TranslatedText';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -28,12 +29,10 @@ export default function ChatMessage({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(message.content);
+    const success = await copyToClipboard(message.content);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy message:', error);
     }
   };
 

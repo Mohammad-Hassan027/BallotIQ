@@ -8,6 +8,7 @@ import type { QuizResult } from '@/types';
 import KnowledgeMeter from '@/components/Assessment/KnowledgeMeter';
 import type { KnowledgeLevel } from '@/types';
 import TranslatedText from '@/components/ui/TranslatedText';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 
 interface ScoreBoardProps {
   score: number;
@@ -32,18 +33,15 @@ export default function ScoreBoard({
 
   /** Copies a formatted result string to the clipboard. */
   const handleShare = async () => {
-    if (!navigator?.clipboard) return;
     const levelLabel = knowledgeLevel.charAt(0).toUpperCase() + knowledgeLevel.slice(1);
     const text =
       `🗳️ I just scored ${score}/${total} on BallotIQ's ${countryName} Election Knowledge Quiz!\n` +
       `Level: ${levelLabel} | ${percentage}% correct\n` +
       `Learn about your elections: https://ballotiq-61721852903.us-central1.run.app`;
-    try {
-      await navigator.clipboard.writeText(text);
+    const success = await copyToClipboard(text);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Silently ignore clipboard errors (permissions denied, SSR, etc.)
     }
   };
 
