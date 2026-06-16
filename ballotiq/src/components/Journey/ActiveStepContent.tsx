@@ -99,6 +99,7 @@ export default function ActiveStepContent({
             isSpeaking={isSpeaking}
             currentText={currentText}
             onInteraction={onInteraction}
+            stepId={activeStep.id}
           />
         </div>
       )}

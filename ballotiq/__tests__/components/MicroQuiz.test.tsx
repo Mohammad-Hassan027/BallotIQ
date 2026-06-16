@@ -185,7 +185,7 @@ describe('MicroQuiz', () => {
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
     // 1 header skeleton + 4 option skeletons = 5 total children or similar,
     // let's just check the 4 skeleton divs via querySelectorAll
-    const skeletons = container.querySelectorAll('.h-10');
+    const skeletons = container.querySelectorAll('.h-12');
     expect(skeletons.length).toBe(4);
     expect(screen.queryByText('What is the voting age?')).not.toBeInTheDocument();
   });

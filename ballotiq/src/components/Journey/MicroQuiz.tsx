@@ -28,6 +28,7 @@ interface MicroQuizProps {
   isSpeaking?: boolean;
   currentText?: string | null;
   onInteraction?: () => void;
+  stepId?: string;
 }
 
 /** Interactive micro-quiz card with animated feedback */
@@ -46,6 +47,7 @@ export default function MicroQuiz({
   isSpeaking = false,
   currentText = null,
   onInteraction,
+  stepId,
 }: MicroQuizProps) {
   if (loading && !question) {
     return (
@@ -75,6 +77,14 @@ export default function MicroQuiz({
   }
 
   if (!question) return null;
+
+  // Generate a stable, unique, and valid HTML identifier for the hint
+  const safeQuestionId = question.question
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  const hintId = `hint-${stepId || safeQuestionId}`;
 
   return (
     <ErrorBoundary componentName="MicroQuiz">
@@ -109,7 +119,7 @@ export default function MicroQuiz({
           <div className="flex flex-col items-center gap-2">
             <button
               onClick={() => {
-                const hintEl = document.getElementById(`hint-${question.question.substring(0, 5)}`);
+                const hintEl = document.getElementById(hintId);
                 if (hintEl) hintEl.classList.toggle('hidden');
                 onInteraction?.();
               }}
@@ -118,7 +128,7 @@ export default function MicroQuiz({
             >
               <TranslatedText text="Need a hint?" />
             </button>
-            <div id={`hint-${question.question.substring(0, 5)}`} className="hidden animate-in fade-in slide-in-from-top-1">
+            <div id={hintId} className="hidden animate-in fade-in slide-in-from-top-1">
               <p className="text-[11px] text-gray-500 italic text-center px-4 leading-relaxed">
                 <TranslatedText text={question.hint} isStatic={false} />
               </p>
