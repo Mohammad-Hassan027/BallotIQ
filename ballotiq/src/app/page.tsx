@@ -340,24 +340,96 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-white">BallotIQ</span>
-            <span className="text-gray-600 text-xs">
-              — <TranslatedText text="Empowering Voters Worldwide" />
-            </span>
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950 dark:bg-gradient-to-br dark:from-gray-950 dark:via-blue-950 dark:to-gray-950 bg-gray-50 px-6 py-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Main Grid - 3 Columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10 pb-8 lg:pb-10 border-b border-white/5 dark:border-white/5 border-gray-200">
+            {/* Column 1: Brand - Left */}
+            <div className="space-y-3 lg:space-y-4 text-center sm:text-left">
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-gray-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0">
+                  <span className="text-sm">🗳️</span>
+                </div>
+                <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  BallotIQ
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-xs mx-auto sm:mx-0">
+                <TranslatedText text="Empowering Voters Worldwide" />
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                © 2026 BallotIQ.{" "}
+                <TranslatedText text="Built with Google Gemini." />
+              </p>
+            </div>
+
+            {/* Column 2: Platform Values - Centered */}
+            <div className="space-y-3 lg:space-y-4 text-center">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                <TranslatedText text="Platform Values" />
+              </h4>
+              <div className="flex flex-wrap gap-2 lg:gap-3 justify-center">
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all duration-200">
+                  <TranslatedText text="Non-partisan" />
+                </span>
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all duration-200">
+                  <TranslatedText text="Educational" />
+                </span>
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all duration-200">
+                  <TranslatedText text="Open Source" />
+                </span>
+              </div>
+            </div>
+
+            {/* Column 3: Explore - Centered */}
+            <div className="space-y-3 lg:space-y-4 text-center">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                <TranslatedText text="Explore" />
+              </h4>
+              <div className="flex flex-wrap gap-3 lg:gap-4 justify-center">
+                <a
+                  href="#"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-white transition-colors duration-200"
+                >
+                  <TranslatedText text="About" />
+                </a>
+                <a
+                  href="#"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-white transition-colors duration-200"
+                >
+                  <TranslatedText text="Privacy Policy" />
+                </a>
+                <a
+                  href="#"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-white transition-colors duration-200"
+                >
+                  <TranslatedText text="Contact" />
+                </a>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-8 text-xs font-medium text-gray-500 uppercase tracking-widest">
-            <TranslatedText text="Non-partisan" />
-            <TranslatedText text="Educational" />
-            <TranslatedText text="Open Source" />
+
+          {/* Bottom Bar */}
+          <div className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center sm:text-left">
+              <TranslatedText text="Made with care for better civic engagement" />
+            </p>
+            <div className="flex gap-4 lg:gap-6 text-[10px] font-medium uppercase tracking-widest flex-wrap justify-center">
+              <span className="text-blue-500/80 dark:text-blue-400/60">
+                Secure
+              </span>
+              <span className="text-green-500/80 dark:text-green-400/60">
+                Non-partisan
+              </span>
+              <span className="text-purple-500/80 dark:text-purple-400/60">
+                AI Powered
+              </span>
+            </div>
           </div>
-          <p className="text-xs text-gray-700">
-            © 2026 BallotIQ. <TranslatedText text="Built with Google Gemini." />
-          </p>
         </div>
       </footer>
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
