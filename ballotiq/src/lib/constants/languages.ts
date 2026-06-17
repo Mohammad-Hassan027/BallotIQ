@@ -81,6 +81,14 @@ export const LANGUAGES: LanguageInfo[] = [
     googleTranslateCode: 'ar',
     googleTTSCode: 'ar-XA',
   },
+  {
+    code: 'pt',
+    name: 'Portuguese',
+    nativeName: 'Português',
+    direction: 'ltr',
+    googleTranslateCode: 'pt',
+    googleTTSCode: 'pt-BR',
+  },
 ];
 
 /**

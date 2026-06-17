@@ -48,7 +48,7 @@ describe('Gemini Core API', () => {
 
   beforeAll(() => {
     jest.useFakeTimers();
-    process.env = { ...originalEnv, NEXT_PUBLIC_GEMINI_API_KEY: 'test-key-12345' };
+    process.env = { ...originalEnv, GEMINI_API_KEY: 'test-key-12345', NEXT_PUBLIC_GEMINI_API_KEY: 'test-key-12345' };
     // Require the module after setting the environment variable
     const core = require('@/lib/gemini/core');
     callGemini = core.callGemini;

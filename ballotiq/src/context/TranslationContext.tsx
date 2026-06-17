@@ -21,6 +21,7 @@ import arLocales from '@/locales/ar.json';
 import frLocales from '@/locales/fr.json';
 import teLocales from '@/locales/te.json';
 import esLocales from '@/locales/es.json';
+import ptLocales from '@/locales/pt.json';
 
 const DICTIONARIES: Record<string, Record<string, string>> = {
   hi: hiLocales,
@@ -30,6 +31,7 @@ const DICTIONARIES: Record<string, Record<string, string>> = {
   fr: frLocales,
   te: teLocales,
   es: esLocales,
+  pt: ptLocales,
 };
 
 interface TranslationContextType {
@@ -54,6 +56,7 @@ const VALID_LANGUAGES: SupportedLanguage[] = [
   "es",
   "de",
   "ar",
+  "pt",
 ];
 
 export function TranslationProvider({ children }: { children: ReactNode }) {

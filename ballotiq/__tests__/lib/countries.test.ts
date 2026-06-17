@@ -27,6 +27,12 @@ describe('COUNTRIES constants', () => {
     expect(india?.languages).toContain('ta');
   });
 
+  it('Brazil has Portuguese (pt) and not Spanish (es) in languages array', () => {
+    const brazil = COUNTRIES.find(c => c.code === 'BR');
+    expect(brazil?.languages).toContain('pt');
+    expect(brazil?.languages).not.toContain('es');
+  });
+
   it('no duplicate country codes', () => {
     const codes = COUNTRIES.map(c => c.code);
     const uniqueCodes = new Set(codes);

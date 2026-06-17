@@ -13,7 +13,7 @@ export type ElectionStepStatus = 'locked' | 'upcoming' | 'current' | 'completed'
 export type QuizDifficulty = 'easy' | 'medium' | 'hard';
 
 /** Languages supported by BallotIQ */
-export type SupportedLanguage = 'en' | 'hi' | 'ta' | 'te' | 'fr' | 'es' | 'de' | 'ar';
+export type SupportedLanguage = 'en' | 'hi' | 'ta' | 'te' | 'fr' | 'es' | 'de' | 'ar' | 'pt';
 
 /** Source of learning content */
 export type LearningSource = 'gemini' | 'cache' | 'fallback';

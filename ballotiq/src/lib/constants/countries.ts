@@ -66,7 +66,7 @@ export const COUNTRIES: Country[] = [
     votingAge: 16,
     electionBody: 'Superior Electoral Court',
     electionBodyUrl: 'https://www.tse.jus.br',
-    languages: ['es', 'en'],
+    languages: ['pt', 'en'],
   },
   {
     code: 'AU',
