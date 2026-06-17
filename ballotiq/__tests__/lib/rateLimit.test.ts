@@ -28,7 +28,27 @@ describe("getRateLimitMessage", () => {
 });
 
 describe("getDailyLimit", () => {
-  // ... (unchanged)
+  it("returns 40 for gemini", () => {
+    expect(getDailyLimit("gemini")).toBe(40);
+  });
+
+  it("returns 100 for translate", () => {
+    expect(getDailyLimit("translate")).toBe(100);
+  });
+
+  it("returns 50 for tts", () => {
+    expect(getDailyLimit("tts")).toBe(50);
+  });
+
+  it("returns positive integers for all services", () => {
+    const services: APIService[] = ["gemini", "translate", "tts"];
+    for (const service of services) {
+      const limit = getDailyLimit(service);
+      expect(typeof limit).toBe("number");
+      expect(limit).toBeGreaterThan(0);
+      expect(Number.isInteger(limit)).toBe(true);
+    }
+  });
 });
 
 describe("checkRateLimit", () => {
