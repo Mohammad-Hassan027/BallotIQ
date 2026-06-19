@@ -1,4 +1,4 @@
-name: CI – Tests & jest-output.json validation
+name: CI – Tests & jest-output.json
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Run tests & validate jest-output.json
+    name: Run tests & upload jest-output.json artifact
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,17 +28,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests and regenerate jest-output.json
+      - name: Run tests and generate jest-output.json
         run: npx jest --json --outputFile=jest-output.json
 
-      - name: Fail if jest-output.json is out of sync
-        run: |
-          if ! git diff --exit-code jest-output.json; then
-            echo ""
-            echo "=============================================="
-            echo "ERROR: jest-output.json is out of sync."
-            echo "Run 'npx jest --json --outputFile=jest-output.json'"
-            echo "inside ballotiq/ and commit the updated file."
-            echo "=============================================="
-            exit 1
-          fi
+      - name: Upload jest-output.json as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-output
+          path: ballotiq/jest-output.json

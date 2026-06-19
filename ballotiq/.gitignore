@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+jest-output.json
 
 # next.js
 /.next/
