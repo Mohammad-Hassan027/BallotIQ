@@ -84,11 +84,31 @@ export function useProgress(
   useEffect(() => {
     async function restore() {
       if (!sessionId) return;
+
+      /**
+       * Applies saved progress, performing a soft knowledgeLevel migration if needed.
+       * The knowledgeLevel check is intentionally NOT a hard gate — discarding saved
+       * progress on a level mismatch would cause silent data loss (see issue #87).
+       * Instead we restore completedSteps and all other fields, then update the level
+       * to the current session value so future saves reflect the correct level.
+       */
+      function applyRestored(saved: UserProgress): UserProgress {
+        if (saved.knowledgeLevel !== knowledgeLevel) {
+          console.warn(
+            `[useProgress] knowledgeLevel mismatch: stored="${saved.knowledgeLevel}" current="${knowledgeLevel}". ` +
+            'Restoring progress and migrating to current level.'
+          );
+          return { ...saved, knowledgeLevel };
+        }
+        return saved;
+      }
+
       // 1. Try Offline DB first for immediate response
       try {
         const localSaved = await offlineDB.get<UserProgress>(STORES.PROGRESS, sessionId);
-        if (localSaved && localSaved.countryCode === countryCode && localSaved.knowledgeLevel === knowledgeLevel) {
-          setProgress(localSaved);
+        // Guard on countryCode only — knowledgeLevel mismatch is handled via soft migration
+        if (localSaved && localSaved.countryCode === countryCode) {
+          setProgress(applyRestored(localSaved));
         }
       } catch { /* ignore */ }
 
@@ -96,10 +116,12 @@ export function useProgress(
       try {
         await authReady;
         const saved = await getProgress(sessionId);
-        if (saved && saved.countryCode === countryCode && saved.knowledgeLevel === knowledgeLevel) {
-          // If Firestore is newer or we don't have local, update local
-          setProgress(saved);
-          offlineDB.set(STORES.PROGRESS, sessionId, saved).catch(() => {});
+        // Guard on countryCode only — knowledgeLevel mismatch is handled via soft migration
+        if (saved && saved.countryCode === countryCode) {
+          // Firestore is the source of truth; apply soft migration if needed
+          const migrated = applyRestored(saved);
+          setProgress(migrated);
+          offlineDB.set(STORES.PROGRESS, sessionId, migrated).catch(() => {});
         } else if (!progress) {
           const initial: UserProgress = {
             sessionId, countryCode, completedSteps: [],
