@@ -116,6 +116,32 @@ BallotIQ/
 
 ---
 
+## AI Agents & Skills
+
+This project includes AI agent configuration to assist development. Skills are expert guides loaded automatically when relevant.
+
+### Installed Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `core-web-vitals` | Audit and fix LCP / INP / CLS performance metrics |
+| `react-testing-library` | Reference for writing component tests with `@testing-library/react` |
+| `seo-audit` | Technical SEO audit — meta tags, indexing, page speed |
+| `wcag-audit-patterns` | WCAG 2.2 accessibility audit and remediation |
+
+Skills are defined in `.agents/skills/` and locked in `skills-lock.json`. Do not manually edit these files.
+
+### Next.js Docs
+
+`ballotiq/AGENTS.md` embeds a live index of Next.js 15 documentation used to look up correct APIs when working on routing, data fetching, or rendering. If the docs index is missing, regenerate it:
+
+```bash
+cd ballotiq
+npm run install-nextjs-docs
+```
+
+---
+
 ## Types of Contributions
 
 ### 🐛 Bug Reports
