@@ -49,7 +49,7 @@ export function useLearnPageLogic() {
   const { steps, loading: guideLoading } = useElectionGuide(countryCode, userContext);
   
   // Progress tracking
-  const { completeStep: _completeStep, completedSteps, saveMicroQuizResult } = useProgress(
+  const { completeStep: _completeStep, completedSteps, saveMicroQuizResult, updateLanguage } = useProgress(
     countryCode, 
     userContext?.knowledgeLevel || 'beginner'
   );
@@ -144,5 +144,6 @@ export function useLearnPageLogic() {
     handleStepClick,
     moveToNextStep,
     completeStep,
+    updateLanguage,
   };
 }

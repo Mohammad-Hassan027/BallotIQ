@@ -5,7 +5,7 @@ import Image from 'next/image';
 import LanguageSelector from '@/components/ui/LanguageSelector';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import TranslatedText from '@/components/ui/TranslatedText';
-import type { KnowledgeLevel } from '@/types';
+import type { KnowledgeLevel, SupportedLanguage } from '@/types';
 
 interface LearnPageHeaderProps {
   countryCode: string;
@@ -15,6 +15,8 @@ interface LearnPageHeaderProps {
   onBack: () => void;
   onFindPollingStations: () => void;
   onAiAssistant: () => void;
+  /** Persists the chosen language to Firestore via useProgress.updateLanguage */
+  onLanguageChange?: (lang: SupportedLanguage) => void;
 }
 
 /**
@@ -29,6 +31,7 @@ export default function LearnPageHeader({
   onBack,
   onFindPollingStations,
   onAiAssistant,
+  onLanguageChange,
 }: LearnPageHeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-white/5 shadow-2xl">
@@ -91,7 +94,7 @@ export default function LearnPageHeader({
             <span><TranslatedText text="AI Assistant" /></span>
           </button>
           <ThemeToggle />
-          <LanguageSelector />
+          <LanguageSelector onLanguageChange={onLanguageChange} />
         </div>
       </div>
     </header>

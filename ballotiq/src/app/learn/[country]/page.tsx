@@ -25,7 +25,7 @@ export default function LearnPage() {
     suggestion, dismiss, recordInteraction,
     question, quizLoading, selectedAnswer, isCorrect, showResult, explanation,
     submitAnswer, resetQuiz, toggleTTS, isSpeaking, currentText,
-    handleStepClick, moveToNextStep, completeStep
+    handleStepClick, moveToNextStep, completeStep, updateLanguage
   } = useLearnPageLogic();
 
   if (!userContext) {
@@ -50,6 +50,7 @@ export default function LearnPage() {
         onBack={() => router.push('/choose-path')}
         onFindPollingStations={() => router.push('/polling-stations')}
         onAiAssistant={() => router.push('/assistant')}
+        onLanguageChange={updateLanguage}
       />
 
       {/* Proactive Suggestion Overlay */}

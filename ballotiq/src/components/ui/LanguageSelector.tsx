@@ -10,13 +10,17 @@ import { Globe, ChevronDown, Check } from 'lucide-react';
 import { LANGUAGES } from '@/lib/constants/languages';
 import { useTranslation } from '@/hooks/useTranslation';
 import TranslatedText from '@/components/ui/TranslatedText';
+import type { SupportedLanguage } from '@/types';
 
 interface LanguageSelectorProps {
   className?: string;
+  /** Optional callback invoked after a language is selected. Use this to
+   * persist the preference to Firestore via updateLanguage from useProgress. */
+  onLanguageChange?: (lang: SupportedLanguage) => void;
 }
 
 /** Premium custom dropdown for switching between 8 supported languages */
-export default function LanguageSelector({ className = '' }: LanguageSelectorProps) {
+export default function LanguageSelector({ className = '', onLanguageChange }: LanguageSelectorProps) {
   const { language, setLanguage, translate } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -148,12 +152,14 @@ export default function LanguageSelector({ className = '' }: LanguageSelectorPro
                   <button
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      setLanguage(lang.code);
+                      setLanguage(lang.code as SupportedLanguage);
+                      onLanguageChange?.(lang.code as SupportedLanguage);
                       setIsOpen(false);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        setLanguage(lang.code);
+                        setLanguage(lang.code as SupportedLanguage);
+                        onLanguageChange?.(lang.code as SupportedLanguage);
                         setIsOpen(false);
                       }
                     }}

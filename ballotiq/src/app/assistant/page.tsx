@@ -11,6 +11,7 @@ import { ArrowLeft, Menu } from 'lucide-react';
 import Image from 'next/image';
 import type { UserContext, ElectionStep, ConversationMetadata } from '@/types';
 import { useTTS } from '@/hooks/useTTS';
+import { useProgress } from '@/hooks/useProgress';
 import { getFallbackGuide } from '@/lib/gemini/fallback';
 import ChatWindow from '@/components/Assistant/ChatWindow';
 import KnowledgeMeter from '@/components/Assessment/KnowledgeMeter';
@@ -93,6 +94,13 @@ export default function AssistantPage() {
     if (!userContext) return [];
     return getFallbackGuide(userContext.countryCode, userContext.knowledgeLevel) ?? [];
   }, [userContext]);
+
+  // Persist language preference to Firestore when user changes it on this page.
+  // useProgress is safe to call unconditionally; it no-ops until userContext is loaded.
+  const { updateLanguage } = useProgress(
+    userContext?.countryCode ?? '',
+    userContext?.knowledgeLevel ?? 'beginner'
+  );
 
   const isOpenChat = userContext?.mainConfusion === 'Direct query';
 
@@ -218,7 +226,7 @@ export default function AssistantPage() {
               <TranslatedText text="BallotIQ AI Active" />
             </div>
             <ThemeToggle />
-            <LanguageSelector />
+            <LanguageSelector onLanguageChange={updateLanguage} />
           </div>
         </div>
       </header>
