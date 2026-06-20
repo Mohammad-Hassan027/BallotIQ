@@ -23,6 +23,7 @@ interface UseAdaptiveLearningReturn {
   reExplanation: string | null;
   isReExplaining: boolean;
   handleMicroQuizResult: (correct: boolean, step: ElectionStep, userAnswer: string, correctAnswer: string) => Promise<void>;
+  clearReExplanation: () => void;
   confirmAdaptation: () => void;
   dismissAdaptation: () => void;
   moveToNextStep: () => void;
@@ -64,6 +65,11 @@ export function useAdaptiveLearning(
   const dismissAdaptation = useCallback(() => {
     setConsecutiveErrors(0);
     setShowAdaptationPrompt(false);
+  }, []);
+
+  /** Clears the AI re-explanation so the user can retake the quiz fresh. */
+  const clearReExplanation = useCallback(() => {
+    setReExplanation(null);
   }, []);
 
   const handleMicroQuizResult = useCallback(async (
@@ -115,7 +121,7 @@ export function useAdaptiveLearning(
   return {
     currentStepIndex, adaptationActive, consecutiveErrors, showAdaptationPrompt,
     reExplanation, isReExplaining,
-    handleMicroQuizResult, confirmAdaptation, dismissAdaptation,
+    handleMicroQuizResult, clearReExplanation, confirmAdaptation, dismissAdaptation,
     moveToNextStep, setCurrentStepIndex,
   };
 }

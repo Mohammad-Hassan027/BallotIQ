@@ -72,6 +72,7 @@ export function useLearnPageLogic() {
     adaptationActive, reExplanation, isReExplaining,
     consecutiveErrors,
     handleMicroQuizResult: handleAdaptiveResult,
+    clearReExplanation,
     confirmAdaptation,
     moveToNextStep
   } = useAdaptiveLearning(userContext, steps, completedSteps);
@@ -108,10 +109,20 @@ export function useLearnPageLogic() {
   const handleStepClick = (index: number) => {
     stopTTS();
     resetQuiz();
+    clearReExplanation();
     setCurrentStepIndex(index);
     recordInteraction();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  /**
+   * Resets quiz state and clears the AI re-explanation so the user can
+   * attempt the micro-quiz again with a clean slate.
+   */
+  const handleRetryQuiz = useCallback(() => {
+    resetQuiz();
+    clearReExplanation();
+  }, [resetQuiz, clearReExplanation]);
 
   return {
     router,
@@ -138,6 +149,7 @@ export function useLearnPageLogic() {
     explanation,
     submitAnswer,
     resetQuiz,
+    handleRetryQuiz,
     toggleTTS,
     isSpeaking,
     currentText,
