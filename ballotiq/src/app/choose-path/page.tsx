@@ -55,9 +55,9 @@ export default function ChoosePathPage() {
   if (!selectedCountry) return null;
 
   return (
-    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950 text-gray-200 selection:bg-blue-500/30 flex flex-col relative">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950 text-gray-200 selection:bg-blue-500/30 flex flex-col relative">
       {/* Navigation */}
-      <div className="w-full max-w-7xl mx-auto px-6 h-16 sm:h-20 relative z-20">
+      <div className="w-full max-w-7xl mx-auto px-6 h-16 sm:h-20 sticky top-0 z-20 bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950">
         <button 
           onClick={() => router.push('/#country-selection')}
           className="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-2xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all group shrink-0"
@@ -76,7 +76,7 @@ export default function ChoosePathPage() {
             unoptimized
             className="w-4 h-3 object-cover rounded-sm"
           />
-          <span>{selectedCountry.name}</span>
+          <span className="truncate max-w-[100px] sm:max-w-[200px]">{selectedCountry.name}</span>
         </div>
 
         <div className="absolute right-6 top-1/2 -translate-y-1/2 shrink-0 flex items-center gap-2">
@@ -88,15 +88,15 @@ export default function ChoosePathPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 w-full max-w-4xl mx-auto">
         <div className="w-full text-center space-y-6 animate-in slide-in-from-bottom-8 duration-700">
           <div className="space-y-4">
-            <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight break-words">
               <TranslatedText text="How do you want to learn?" />
             </h1>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed break-words">
               <TranslatedText text="Choose the experience that fits your pace. Deep dive with a structured path or just talk with our AI assistant." />
             </p>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
           {/* Talk with AI - PRIMARY */}
           <button
             onClick={startOpenChat}
@@ -111,17 +111,17 @@ export default function ChoosePathPage() {
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-3xl font-bold text-white">
+                <h3 className="text-3xl font-bold text-white break-words">
                   <TranslatedText text="Talk with AI" />
                 </h3>
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-gray-400 leading-relaxed break-words">
                   <TranslatedText text="Just text or talk directly. The assistant knows your country and explains everything conversationally." />
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 px-6 py-3 bg-blue-500 text-white font-bold rounded-2xl group-hover:bg-blue-400 transition-colors">
+              <div className="flex items-center gap-3 px-6 py-3 bg-blue-500 text-white font-bold rounded-2xl group-hover:bg-blue-400 transition-colors whitespace-normal">
                 <TranslatedText text="Start Conversation" />
-                <Mic className="w-5 h-5" />
+                <Mic className="w-5 h-5 flex-shrink-0" />
               </div>
             </div>
           </button>
@@ -137,29 +137,31 @@ export default function ChoosePathPage() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-3xl font-bold text-white">
+                <h3 className="text-3xl font-bold text-white break-words">
                   <TranslatedText text="Guided Path" />
                 </h3>
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-gray-400 leading-relaxed break-words">
                   <TranslatedText text="Structured lessons, personalized roadmaps, micro-quizzes, and official certification." />
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 text-blue-400 font-semibold group-hover:gap-4 transition-all">
+              <div className="flex items-center gap-2 text-blue-400 font-semibold group-hover:gap-4 transition-all whitespace-normal">
                 <TranslatedText text="Start Guided Learning" />
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5 flex-shrink-0" />
               </div>
             </div>
           </button>
         </div>
 
-        <button 
-          onClick={() => router.push('/#country-selection')}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-400 font-medium hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <TranslatedText text="Change Country" />
-        </button>
+        <div className="sticky bottom-0 pb-4 pt-4 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent mt-4 w-full flex justify-center">
+          <button 
+            onClick={() => router.push('/#country-selection')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-400 font-medium hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+            <TranslatedText text="Change Country" />
+          </button>
+        </div>
         </div>
       </div>
     </div>
