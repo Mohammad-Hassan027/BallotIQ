@@ -10,6 +10,7 @@ import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import './globals.css';
 import BackToTop from '@/components/BackToTop';
 import KeyboardShortcutsContainer from '@/components/ui/KeyboardShortcutsContainer';
+import PostHogProvider from '@/components/PostHogProvider';
 
 const sora = Sora({
   subsets: ['latin'],
@@ -88,6 +89,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <PostHogProvider>
         <ThemeProvider>
           <TranslationProvider>
             <ServiceWorkerRegistration />
@@ -109,6 +111,7 @@ export default function RootLayout({
             <KeyboardShortcutsContainer />
           </TranslationProvider>
         </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
