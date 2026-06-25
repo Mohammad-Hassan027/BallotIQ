@@ -3,7 +3,8 @@
  * Shows score, performance message, and celebratory animation.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import type { QuizResult } from '@/types';
 import KnowledgeMeter from '@/components/Assessment/KnowledgeMeter';
 import type { KnowledgeLevel } from '@/types';
@@ -30,6 +31,17 @@ export default function ScoreBoard({
   const isPerfect = percentage === 100;
 
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isPerfect) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ffffff'],
+      });
+    }
+  }, [isPerfect]);
 
   /** Copies a formatted result string to the clipboard. */
   const handleShare = async () => {
