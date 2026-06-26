@@ -12,12 +12,32 @@ import { captureEvent } from '@/lib/posthog/helper';
 import { EVENTS } from '@/lib/posthog/events';
 
 /**
+ * Formats an ISO date string to a human-readable relative time representation.
+ * Handles try-catch internally to gracefully handle invalid/missing dates.
+ */
+function relativeTime(isoString: string): string {
+  try {
+    const time = new Date(isoString).getTime();
+    if (isNaN(time)) return '';
+    const diff = Date.now() - time;
+    const days = Math.floor(diff / 86400000);
+    if (days < 0) return 'Today';
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    return `${days} days ago`;
+  } catch (error) {
+    return '';
+  }
+}
+
+/**
  * Path selection page — shown after country selection.
  * Allows users to choose between Guided Learning and Open Chat.
  */
 export default function ChoosePathPage() {
   const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [lastVisited, setLastVisited] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -29,6 +49,54 @@ export default function ChoosePathPage() {
       }
     }
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      let lastUpdated: string | null = null;
+
+      // 1. Try reading from localStorage key ballotiq_progress
+      const storedProgress = localStorage.getItem('ballotiq_progress');
+      if (storedProgress) {
+        const progress = JSON.parse(storedProgress);
+        if (progress && typeof progress === 'object' && progress.lastUpdated) {
+          lastUpdated = progress.lastUpdated;
+        }
+      }
+
+      // 2. If not found, try sessionStorage ballotiq_context
+      if (!lastUpdated) {
+        const storedContext = sessionStorage.getItem('ballotiq_context');
+        if (storedContext) {
+          const context = JSON.parse(storedContext);
+          if (context && typeof context === 'object') {
+            if (context.lastUpdated) {
+              lastUpdated = context.lastUpdated;
+            } else if (context.sessionId && context.sessionId.startsWith('chat_')) {
+              // Fallback: parse timestamp from chat session ID
+              const parts = context.sessionId.split('_');
+              if (parts.length > 1) {
+                const ts = parseInt(parts[1], 10);
+                if (!isNaN(ts)) {
+                  lastUpdated = new Date(ts).toISOString();
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (lastUpdated) {
+        const relative = relativeTime(lastUpdated);
+        if (relative) {
+          setLastVisited(relative);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing progress or context for last visited date:', error);
+    }
+  }, []);
 
   const startGuidedPath = () => {
     captureEvent(EVENTS.PATH_CHOSEN, { path: 'guided', country_code: selectedCountry?.code });
@@ -150,6 +218,15 @@ export default function ChoosePathPage() {
                 <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl sm:rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:-rotate-6 transition-transform">
                   <Map className="w-8 sm:w-10 h-8 sm:h-10 text-gray-300" />
                 </div>
+
+                {lastVisited && (
+                  <div className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 inline-flex items-center gap-1.5 transition-all duration-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>
+                      <TranslatedText text="Last visited" />: {lastVisited}
+                    </span>
+                  </div>
+                )}
 
                 <div className="space-y-2 sm:space-y-3">
                   <h3 className="text-2xl sm:text-3xl font-bold text-white">
