@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function BackToTop() {
-  const [visible, setVisible] = useState(false);
+export default function BackToTop(): JSX.Element | null {
+  const [visible, setVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 300);
